@@ -13,7 +13,7 @@ import (
 func GetApplicationDocumentsDirectory(paths ...string) (string, error) {
 	dir, _ := os.UserConfigDir()
 
-	path := fmt.Sprintf("%s/gvmapp/Documents/%s", dir, strings.Join(paths, "/"))
+	path := fmt.Sprintf("%s/.gvmapp/%s", dir, strings.Join(paths, "/"))
 
 	err := os.MkdirAll(path, os.ModePerm);
 
@@ -34,6 +34,7 @@ func ReadFileContents(path string) (string, error) {
 }
 
 func WriteFileContents(path string, contents []byte) error {
+
 	err := os.WriteFile(path, contents, os.ModePerm)
 
 	if err != nil {
@@ -47,7 +48,7 @@ func OpenFileContents(ctx context.Context) (string, error) {
 	path, err := runtime.OpenFileDialog(ctx, runtime.OpenDialogOptions{
 		Filters: []runtime.FileFilter{
 			{
-				DisplayName: " Collection Files (*.json, *.varly)",
+				DisplayName: "Collection Files (*.json, *.varly)",
 				Pattern:     "*.json;*.varly",
 			},
 		},

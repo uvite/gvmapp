@@ -2,7 +2,13 @@ package main
 
 import (
 	"embed"
+	"fmt"
+	gvmapp "github.com/uvite/gvmapp/backend/gvmapp"
+	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
 	"log"
+	"net/http"
+	"os"
+	"strings"
 
 	"github.com/wailsapp/wails/v2/pkg/options/mac"
 
@@ -15,39 +21,61 @@ import (
 //go:embed frontend/dist
 var assets embed.FS
 
-//go:embed build/appicon.png
+// icon会默认使用 build/appicon.png 转换为byte数组
 var icon []byte
+
+type FileLoader struct {
+	http.Handler
+}
+
+func NewFileLoader() *FileLoader {
+	return &FileLoader{}
+}
+
+func (h *FileLoader) ServeHTTP(res http.ResponseWriter, req *http.Request) {
+	requestedFilename := strings.TrimPrefix(req.URL.Path, "/")
+	fileData, err := os.ReadFile("/" + requestedFilename)
+	if err != nil {
+		res.WriteHeader(http.StatusBadRequest)
+		res.Write([]byte(fmt.Sprintf("Could not load file %s", requestedFilename)))
+	}
+	res.Write(fileData)
+}
 
 func main() {
 	// Create an instance of the app structure
-	app := NewApp()
+	app := gvmapp.NewApp()
 
 	// Create application with options
 	err := wails.Run(&options.App{
-		Title:             app.Title(),
-		Width:             720,
-		Height:            640,
-		MinWidth:          720,
-		MinHeight:         640,
-		MaxWidth:          0,
-		MaxHeight:         0,
-		DisableResize:     false,
-		Fullscreen:        false,
-		Frameless:         false,
-		StartHidden:       false,
-		HideWindowOnClose: false,
+		Title: app.Title(),
 
-		Assets:            assets,
-		AssetsHandler:     NewHandler(),
-		LogLevel:          logger.DEBUG,
-		OnStartup:         app.startup,
-		OnDomReady:        app.domReady,
-		OnShutdown:        app.shutdown,
+		Width:             1100,  // 启动宽度
+		Height:            768,   // 启动高度
+		MinWidth:          1100,  // 最小宽度
+		MinHeight:         768,   // 最小高度
+		HideWindowOnClose: true,  // 关闭的时候隐藏窗口
+		StartHidden:       false, // 启动的时候隐藏窗口 （建议生产环境关闭此项，开发环境开启此项，原因自己体会）
+		AlwaysOnTop:       false, // 窗口固定在最顶层
+		AssetServer: &assetserver.Options{
+			Assets:  assets,
+			Handler: NewFileLoader(),
+		},
+		BackgroundColour: &options.RGBA{R: 0, G: 0, B: 0, A: 128},
+		OnStartup:        app.Startup,
+		OnDomReady:       app.DomReady,
+		OnShutdown:       app.Shutdown,
+		OnBeforeClose:    app.OnBeforeClose,
+		CSSDragProperty:  "--wails-draggable",
+		CSSDragValue:     "drag",
+
+		LogLevel: logger.DEBUG,
+
 		Bind: []interface{}{
 			app,
-			app.SettingsService,
-			app.FileSystemService,
-			app.CollectionService,
+			//app.SettingsService,
+			//app.FileSystemService,
+			//app.CollectionService,
 		},
 		// Windows platform specific options
 		Windows: &windows.Options{

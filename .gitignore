@@ -9,14 +9,14 @@ build/*
 .idea
 .vscode
 .env
-
+adev
 node_modules
 
 frontend/dist
 frontend/wailsjs
 frontend/src/wailsjs
 
-frontend/src/*.js
+
 frontend/src/*.json
 frontend/src/*.txt
 frontend/src/*.map

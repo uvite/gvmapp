@@ -1,19 +1,12 @@
 {
   "name": "Gvmapp",
-  "assetdir": "./frontend/dist",
-  "wailsjsdir": "./frontend/src",
-  "frontend:build": "",
-  "frontend:install": "npm install",
-  "frontend:dev": "",
-  "frontend:dev:watcher": "npm run dev",
-  "version": "2",
-  "Path": "",
-  "BuildDir": "",
   "outputfilename": "Gvmapp",
-  "OutputType": "",
-  "Platform": "",
-  "runNonNativeBuildHooks": false,
-  "postBuildHooks": null,
+  "frontend:install": "npm install",
+  "frontend:build": "npm run build",
+  "frontend:dev:watcher": "npm run dev",
+  "frontend:dev:serverUrl": "auto",
+  "devServer": "localhost:4000",
+  "debounceMS": 10000,
   "Author": {
     "name": "Leven zsh",
     "email": "pelotoken@gmail.com"
@@ -25,8 +18,10 @@
     "copyright": "(c) 2023 Gvmapp",
     "comments": "A delightful desktop app with a bot manage"
   },
-  "debounceMS": 500,
-  "devserverurl": "http://localhost:4000",
+  "author": {
+    "name": "Pixiao",
+    "email": "xiao15103183668@163.com"
+  },
   "appargs": "",
   "nsisType": ""
 }

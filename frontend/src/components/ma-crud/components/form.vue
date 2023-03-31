@@ -1,0 +1,327 @@
+
+<template>
+  <component
+    :is="componentName"
+    v-model:visible="dataVisible"
+    :on-before-ok="submit" @cancel="close"
+    ok-text="保存"
+    cancel-text="关闭"
+    draggable
+    :width="options.formOption.width"
+    :fullscreen="options.formOption.isFull || false"
+    unmount-on-close
+  >
+    <template #title>{{ actionTitle }}</template>
+    <a-spin :loading="dataLoading" tip="加载中..." class="w-full">
+      <ma-form v-model="form" :columns="formColumns" :options="{ showButtons: false }" ref="maFormRef"/>
+    </a-spin>
+  </component>
+</template>
+
+<script setup>
+import { ref, toRaw, getCurrentInstance, inject, provide } from 'vue'
+import { Message } from '@arco-design/web-vue'
+import { containerItems } from '@cps/ma-form/js/utils'
+import { isArray, isFunction, get, cloneDeep, isUndefined } from 'lodash'
+import { useRouter } from 'vue-router'
+import tool from '@/utils/tool'
+import { useFormStore } from '@/store/index'
+
+const formStore = useFormStore()
+const router = useRouter()
+const app = getCurrentInstance().appContext.app
+const maFormRef = ref()
+const componentName = ref('a-modal')
+const columns = inject('columns')
+const layoutColumns = ref(new Map());
+const options = inject('options')
+const formColumns = ref([])
+const currentAction = ref('')
+const dataVisible = ref(false)
+const form = ref({})
+const actionTitle = ref('')
+const dataLoading = ref(true)
+const emit = defineEmits(['success', 'error'])
+
+provide('form', toRaw(form))
+
+const submit = async () => {
+  const formData = maFormRef.value.getFormData()
+  if (await maFormRef.value.validateForm()) {
+    return false
+  }
+
+  let response
+  if (currentAction.value === 'add') {
+    isFunction(options.beforeAdd) && await options.beforeAdd(formData)
+    response = await options.add.api(formData)
+    isFunction(options.afterAdd) && await options.afterAdd(response, formData)
+  } else {
+    isFunction(options.beforeEdit) && await options.beforeEdit(formData)
+    response = await options.edit.api(formData[options.pk], formData)
+    isFunction(options.afterEdit) && await options.afterEdit(response, formData)
+  }
+  if ( response.success ) {
+    Message.success(response.message || `${actionTitle.value}成功！`)
+    emit('success', response)
+    return true
+  }
+}
+const open = () => {
+  formColumns.value = []
+  layoutColumns.value = new Map()
+  init()
+  if (options.formOption.viewType === 'tag') {
+    if (! options.formOption.tagId ) {
+      Message.info('未配置 tagId')
+      return
+    }
+    if (! options.formOption.tagName ) {
+      Message.info('未配置 tagName')
+      return
+    }
+    const config = {
+      options,
+      formColumns: formColumns.value
+    }
+    formStore.formList[options.formOption.tagId] = {
+      config,
+      addData: {},
+      editData: {},
+    }
+    const queryParams = {
+      tagId: options.formOption.tagId,
+      op: currentAction.value,
+    }
+    if (currentAction.value === 'add') {
+      formStore.formList[options.formOption.tagId].addData = cloneDeep(form.value)
+    } else {
+      formStore.formList[options.formOption.tagId].editData[form.value[options.pk]] = cloneDeep(form.value)
+      queryParams.key = form.value[options.pk]
+    }
+    form.value = {}
+    router.push(`/openForm/${options.formOption.tagId}` + tool.httpBuild(queryParams, true))
+  } else {
+    componentName.value = options.formOption.viewType === 'drawer' ? 'a-drawer' : 'a-modal'
+    dataVisible.value = true
+  }
+}
+const close = () => {
+  dataVisible.value = false
+  formColumns.value = []
+  form.value = {}
+}
+const add = () => {
+  actionTitle.value = '新增'
+  currentAction.value = 'add'
+  form.value = {}
+  open()
+}
+const edit = (data) => {
+  actionTitle.value = '编辑'
+  currentAction.value = 'edit'
+  for (let i in data) form.value[i] = data[i]
+  open(data)
+}
+
+const init = () => {
+  dataLoading.value = true
+  const layout = JSON.parse(JSON.stringify(options?.formOption?.layout ?? []))
+  // const layout = options?.formOption?.layout ?? []
+  columns.map(async item => {
+    await columnItemHandle(item)
+  })
+  // 设置表单布局
+  settingFormLayout(layout)
+  if (isArray(layout) && layout.length > 0) {
+    formColumns.value = layout
+    const excludeColumns = ['__index', '__operation']
+    columns.map(item => {
+      if (options.formExcludePk) excludeColumns.push(options.pk)
+      if (excludeColumns.includes(item.dataIndex)) return
+      ! item.__formLayoutSetting && formColumns.value.push(item)
+    })
+  }
+
+  dataLoading.value = false
+}
+
+const columnItemHandle = async (item) => {
+  const excludeColumns = ['__index', '__operation']
+  if (options.formExcludePk) excludeColumns.push(options.pk)
+  if (excludeColumns.includes(item.dataIndex)) {
+    layoutColumns.value.set(item.dataIndex, {dataIndex: item.dataIndex, layoutFormRemove: true})
+    return
+  }
+  layoutColumns.value.set(item.dataIndex, item)
+  formColumns.value.push(item)
+
+  // 针对带点的数据处理
+  if (item.dataIndex.indexOf('.') > -1) {
+    form.value[item.dataIndex] = get(form.value, item.dataIndex)
+  }
+
+  // add 默认值处理
+  if (currentAction.value === 'add') {
+    if (item.addDefaultValue && isFunction(item.addDefaultValue)) {
+      form.value[item.dataIndex] = await item.addDefaultValue(form.value)
+    } else if (item.addDefaultValue) {
+      form.value[item.dataIndex] = item.addDefaultValue
+    }
+  }
+  // edit 默认值处理
+  if (currentAction.value === 'edit') {
+    if (item.editDefaultValue && isFunction(item.editDefaultValue)) {
+      form.value[item.dataIndex] = await item.editDefaultValue(form.value)
+    } else if (typeof item.editDefaultValue != 'undefined') {
+      form.value[item.dataIndex] = item.editDefaultValue
+    }
+  }
+
+  // 其他处理
+  item.display = formItemShow(item)
+  item.disabled = formItemDisabled(item)
+  item.readonly = formItemReadonly(item)
+  item.rules = getRules(item)
+}
+const settingFormLayout = (layout) => {
+  if (!isArray(layout)) {
+    return ;
+  }
+  layout.map(async (item, index) => {
+    if ( containerItems.includes(item.formType) ) {
+      switch ( item.formType ) {
+        case 'tabs':
+          if ( item.tabs ) {
+            item.tabs.map(tab => {
+              tab.formList && (tab.formList = settingFormLayout(tab.formList))
+            })
+          }
+          break
+        case 'card':
+          item.formList && (item.formList = settingFormLayout(item.formList))
+          break
+        case 'grid-tailwind':
+        case 'grid':
+          if ( item.cols ) {
+            item.cols.map(col => {
+              col.formList && (col.formList = settingFormLayout(col.formList))
+            })
+          }
+          break
+        case 'table':
+          if ( item.rows ) {
+            item.rows.map(row => {
+              if ( row.cols ) {
+                row.cols.map(col => {
+                  col.formList && (col.formList = settingFormLayout(col.formList))
+                })
+              }
+            })
+          }
+          break
+      }
+    } else {
+      let column = layoutColumns.value.get(item.dataIndex)
+      // 公共column存在以dataIndex作为判断获取配置项
+      if (column) {
+        // 判断是否layout配置移除
+        if (column.layoutFormRemove) {
+          layout[index] = undefined
+          return ;
+        }
+        column['__formLayoutSetting'] = true
+        item = column
+        layout[index] = item
+      }else{
+        // 当公共column不存在，则执行column配置项处理
+        await columnItemHandle(item)
+        let column = layoutColumns.value.get(item.dataIndex)
+        if (column.layoutFormRemove) {
+          layout[index] = undefined
+          return ;
+        }
+        item['__formLayoutSetting'] = true
+        layout[index] = item
+      }
+    }
+  })
+  // 移除
+  return layout.filter(item => {
+    return !isUndefined(item)
+  })
+}
+
+const formItemShow = (item) => {
+  if (!isUndefined(item.display)) {
+    return item.display
+  } else {
+    if (currentAction.value === 'add' && item?.addDisplay !== false) {
+      return true
+    }
+    if (currentAction.value === 'edit' && item?.editDisplay !== false) {
+      return true
+    }
+    return false
+  }
+}
+const formItemDisabled = (item) => {
+  if (!isUndefined(item.disabled)) {
+    return item.disabled
+  } else {
+    if (currentAction.value === 'add' && item?.addDisabled === true) {
+      return true
+    }
+    if (currentAction.value === 'edit' && item?.editDisabled === true) {
+      return true
+    }
+    return false
+  }
+}
+const formItemReadonly = (item) => {
+  if (!isUndefined(item.readonly)) {
+    return item.readonly
+  } else {
+    if (currentAction.value === 'add' && item?.addReadonly === true) {
+      return true
+    }
+    if (currentAction.value === 'edit' && item?.editReadonly === true) {
+      return true
+    }
+    return false
+  }
+}
+
+const toRules = (rules) => {
+
+  if (!rules) {
+    return []
+  }
+
+  if (isArray(rules)) {
+    return rules.map(v => ({...v}))
+  }
+
+  if (!rules.validator && isFunction(rules.validatorFormData)) {
+    rules.validator = (value, cb) => {
+       rules.validatorFormData(value, cb, form.value)
+    }
+  }
+  return {...rules}
+}
+
+const getRules = (item) => {
+  if (currentAction.value === 'add') {
+    return toRules(item.addRules ?? item.commonRules ?? [])
+  }
+  if (currentAction.value === 'edit') {
+    return toRules(item.editRules ?? item.commonRules ?? [])
+  }
+}
+
+const getFormColumns = async (type = 'add') => {
+  await init()
+  return formColumns.value
+}
+defineExpose({ add, edit, currentAction, form, getFormColumns })
+</script>

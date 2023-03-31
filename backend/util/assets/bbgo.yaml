@@ -1,0 +1,50 @@
+---
+persistence:
+  json:
+    directory: "store"
+#  redis:
+#    host: 127.0.0.1
+#    port: 6379
+#    db: 4
+notifications:
+  slack:
+    defaultChannel: "trade"
+    errorChannel: "info"
+
+  switches:
+    trade: true
+    orderUpdate: true
+    submitOrder: true
+
+sessions:
+  binance:
+    exchange: binance
+    futures: true
+    #margin: true
+    #isolatedMargin: true
+    #isolatedMarginSymbol: BTCUSDT
+    envVarPrefix: binance
+    heikinAshi: false
+
+    # Drift strategy intends to place buy/sell orders as much value mas it could be. To exchanges that requires to
+    # calculate fees before placing limit orders (e.g. FTX Pro), make sure the fee rate is configured correctly and
+    # enable modifyOrderAmountForFee to prevent order rejection.
+    makerFeeRate: 0.02%
+    takerFeeRate: 0.07%
+    modifyOrderAmountForFee: false
+
+  okex:
+    exchange: okex
+    futures: true
+    #margin: true
+    #isolatedMargin: true
+    #isolatedMarginSymbol: BTCUSDT
+    envVarPrefix: okex
+    heikinAshi: false
+
+    # Drift strategy intends to place buy/sell orders as much value mas it could be. To exchanges that requires to
+    # calculate fees before placing limit orders (e.g. FTX Pro), make sure the fee rate is configured correctly and
+    # enable modifyOrderAmountForFee to prevent order rejection.
+    makerFeeRate: 0.02%
+    takerFeeRate: 0.07%
+    modifyOrderAmountForFee: false
