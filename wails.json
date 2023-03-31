@@ -1,0 +1,32 @@
+{
+  "name": "Varly",
+  "assetdir": "./frontend/dist",
+  "wailsjsdir": "./frontend/src",
+  "frontend:build": "",
+  "frontend:install": "npm install",
+  "frontend:dev": "",
+  "frontend:dev:watcher": "npm run dev",
+  "version": "2",
+  "Path": "",
+  "BuildDir": "",
+  "outputfilename": "Varly",
+  "OutputType": "",
+  "Platform": "",
+  "runNonNativeBuildHooks": false,
+  "postBuildHooks": null,
+  "Author": {
+    "name": "Selvin Ortiz",
+    "email": "selvin@selvin.co"
+  },
+  "Info": {
+    "companyName": "Selvin Co",
+    "productName": "Varly",
+    "productVersion": "0.5.0",
+    "copyright": "(c) 2022 Selvin Co",
+    "comments": "A delightful desktop app with a fast generative art engine for NFT creators."
+  },
+  "debounceMS": 500,
+  "devserverurl": "http://localhost:34115",
+  "appargs": "",
+  "nsisType": ""
+}
