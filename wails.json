@@ -1,5 +1,5 @@
 {
-  "name": "Varly",
+  "name": "Gvmapp",
   "assetdir": "./frontend/dist",
   "wailsjsdir": "./frontend/src",
   "frontend:build": "",
@@ -9,24 +9,24 @@
   "version": "2",
   "Path": "",
   "BuildDir": "",
-  "outputfilename": "Varly",
+  "outputfilename": "Gvmapp",
   "OutputType": "",
   "Platform": "",
   "runNonNativeBuildHooks": false,
   "postBuildHooks": null,
   "Author": {
-    "name": "Selvin Ortiz",
-    "email": "selvin@selvin.co"
+    "name": "Leven zsh",
+    "email": "pelotoken@gmail.com"
   },
   "Info": {
-    "companyName": "Selvin Co",
-    "productName": "Varly",
-    "productVersion": "0.5.0",
-    "copyright": "(c) 2022 Selvin Co",
-    "comments": "A delightful desktop app with a fast generative art engine for NFT creators."
+    "companyName": "Gvmapp",
+    "productName": "Gvmapp",
+    "productVersion": "0.1.0",
+    "copyright": "(c) 2023 Gvmapp",
+    "comments": "A delightful desktop app with a bot manage"
   },
   "debounceMS": 500,
-  "devserverurl": "http://localhost:34115",
+  "devserverurl": "http://localhost:4000",
   "appargs": "",
   "nsisType": ""
 }

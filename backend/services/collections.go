@@ -18,8 +18,8 @@ import (
 
 	"github.com/disintegration/imaging"
 	wr "github.com/mroth/weightedrand"
-	"github.com/varlyapp/varlyapp/backend/lib"
-	"github.com/varlyapp/varlyapp/backend/types"
+	"github.com/uvite/gvmapp/backend/lib"
+	"github.com/uvite/gvmapp/backend/types"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 

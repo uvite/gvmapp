@@ -10,7 +10,7 @@ import (
 
 	r "runtime"
 
-	"github.com/varlyapp/varlyapp/backend/services"
+	"github.com/uvite/gvmapp/backend/services"
 	"github.com/wailsapp/wails/v2/pkg/menu"
 	"github.com/wailsapp/wails/v2/pkg/menu/keys"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
@@ -18,7 +18,7 @@ import (
 
 var (
 	libdir, _ = os.UserConfigDir()
-	basedir   = filepath.Join(libdir, "varlyapp")
+	basedir   = filepath.Join(libdir, "gvmapp")
 	docsdir   = filepath.Join(basedir, "Documents")
 )
 
@@ -99,10 +99,10 @@ func (app *App) shutdown(ctx context.Context) {
 
 func (app *App) Title() string {
 	if r.GOOS == "darwin" {
-		return "🦄 Varly"
+		return "🦄 Gvmapp"
 	}
 
-	return "Varly"
+	return "Gvmapp"
 }
 
 func (app *App) OpenDirectoryDialog(title string) string {

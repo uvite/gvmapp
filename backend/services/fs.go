@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/varlyapp/varlyapp/backend/lib"
+	"github.com/uvite/gvmapp/backend/lib"
 )
 
 type FileSystemService struct {

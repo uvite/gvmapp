@@ -91,7 +91,7 @@ func GenerateMetadata(config MetadataConfig) error {
 		ExternalURL:  "",
 
 		SellerFeeBasisPoints: "",
-		Compiler:             "Varly.app",
+		Compiler:             "Gvmapp.app",
 
 		// List of Traits
 		Traits: traits,
