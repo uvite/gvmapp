@@ -137,6 +137,7 @@ const handleCancel = () => {
 }
 
 onActivated(() => {
+  alert(333)
   load()
   nextTick(() => {
     rpc.on('shortcut.view.refresh', () => {
@@ -152,7 +153,27 @@ onActivated(() => {
 })
 
 async function load() {
-  rpc.setPageTitle('dashboard')
+  rpc.setPageTitle('K线助手')
+  try{
+    const res = await rpc.app.GetAlertList()
+
+    data.value = res.data.list
+  }catch (e){
+
+  }
+  emitter.on('symbolChange', (data) => {
+    options.value = data
+    symint.value = data
+
+  })
+
+  //
+  // try {
+  //   collectionStore.preview =
+  //       await rpc.CollectionService.GenerateCollectionPreview(collection)
+  // } catch (error) {
+  //   console.error(error)
+  // }
 
   // projects.value = []
   //
@@ -164,23 +185,19 @@ async function load() {
 }
 onMounted(() => {
 
-  emitter.on('symbolChange', (data) => {
-    options.value = data
-    symint.value = data
-
-  })
-  emitter.on('appRun', (data) => {
-
-    getData()
-
-  })
-  // EventsOn("alertList",function(data){
-  //   alert(JSON.stringify(data))
-  //   console.log(data)
+  //alert(333)
+  load()
+  // nextTick(() => {
+  //   rpc.on('shortcut.view.refresh', () => {
+  //     if (route.name === 'dashboard') load()
+  //   })
+  //   rpc.on('shortcut.view.hard-refresh', () => {
+  //     if (route.name === 'start') {
+  //       store.documents = []
+  //       load()
+  //     }
+  //   })
   // })
- // rpc.setPageTitle("Review & Export")
-
-  //getData()
 
 })
 

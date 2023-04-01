@@ -71,10 +71,10 @@ func (a *App) Startup(ctx context.Context) {
 	// 初始化logrus
 	a.LogFile = fmt.Sprintf(configs.LogFile, confDir)
 	a.Log = internal.NewLogger(a.LogFile)
-
-	// 初始化xorm
-	a.DBFile = fmt.Sprintf(configs.DBFile, confDir)
-	a.Db = internal.NewXormEngine(a.DBFile)
+	//
+	//// 初始化xorm
+	//a.DBFile = fmt.Sprintf(configs.DBFile, confDir)
+	//a.Db = internal.NewXormEngine(a.DBFile)
 
 	a.InitExchange()
 	//app.FileSystemService.Ctx = ctx
@@ -153,7 +153,7 @@ func (app *App) OpenDirectoryDialog(title string) string {
 // OnBeforeClose
 func (a *App) OnBeforeClose(ctx context.Context) bool {
 	// 关闭xorm连接
-	a.Db.Close()
+	//a.Db.Close()
 	// 返回 true 将阻止程序关闭
 	return false
 }
