@@ -1,4 +1,18 @@
 const AppPage = [
+   {
+        name: 'alert',
+        path: '',
+        meta: {
+            title: '警报',
+            icon: 'icon-notification',
+            type: 'M',
+        },
+        component: () => import('@/views/dashboard/index.vue'),
+        children:[]
+    }
+]
+const test= [
+
     {
         name: 'data',
         path: '',
@@ -8,16 +22,6 @@ const AppPage = [
             type: 'M',
         },
 
-        children:[]
-    }, {
-        name: 'alert',
-        path: '',
-        meta: {
-            title: '警报',
-            icon: 'icon-notification',
-            type: 'M',
-        },
-        component: () => import('@/views/dashboard/index.vue'),
         children:[]
     },
     {
@@ -52,7 +56,7 @@ const AppPage = [
                     type: 'M',
                 },
                 component: () => import('@/views/userCenter/message.vue'),
-                children:[]
+                children: []
 
             },
             {
@@ -76,7 +80,7 @@ const AppPage = [
                     affix: true
                 },
                 component: () => import('@/views/strategies/code/index.vue'),
-            } ,{
+            }, {
                 name: 'test',
                 path: '/test',
                 meta: {
@@ -86,11 +90,11 @@ const AppPage = [
                     affix: true
                 },
                 component: () => import('@/views/test/index.vue'),
-            }
-            ]
-
+            }]
     }
+
 ]
+
 
 
 export const homePage = {

@@ -39,6 +39,7 @@ const reset = () => {
 }
 
 const getData = () => {
+
   let initdata=genvStore.getGenv()
   if(initdata){
     options.value=initdata

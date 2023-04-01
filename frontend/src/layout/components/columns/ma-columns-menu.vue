@@ -54,7 +54,13 @@ import {useRoute, useRouter} from 'vue-router'
 import MaMenu from '../ma-menu.vue'
 import {useAppStore, useUserStore} from '@/store'
 import AppPage from '@/router/appRoutes'
-import diyRouter from "@/router/diyRouter";
+
+import GvmMessage from './menus/message.vue'
+import GvmAlert from './menus/alert.vue'
+import GvmBoard from './menus/message.vue'
+import GvmDeal from './menus/order.vue'
+import GvmData from './menus/data.vue'
+
 
 const route = useRoute()
 const router = useRouter()
@@ -68,23 +74,23 @@ const title = ref('')
 
 
 const classStyle = ref('flex flex-col parent-menu items-center rounded mt-1 text-gray-200 hover:bg-gray-700 dark:hover:text-gray-50 dark:hover:bg-blackgray-1')
-
-const GvmMessage = defineAsyncComponent(() =>
-    import('./menus/message.vue')
-)
-const GvmAlert = defineAsyncComponent(() =>
-    import('./menus/alert.vue')
-)
-const GvmBoard = defineAsyncComponent(() =>
-    import('./menus/board.vue')
-)
-const GvmDeal = defineAsyncComponent(() =>
-    import('./menus/order.vue')
-)
-const GvmData = defineAsyncComponent(() =>
-    import('./menus/data.vue')
-)
-const showComment = ref("data")
+//
+// const GvmMessage = defineAsyncComponent(() =>
+//     import('./menus/message.vue')
+// )
+// const GvmAlert = defineAsyncComponent(() =>
+//     import('./menus/alert.vue')
+// )
+// const GvmBoard = defineAsyncComponent(() =>
+//     import('./menus/board.vue')
+// )
+// const GvmDeal = defineAsyncComponent(() =>
+//     import('./menus/order.vue')
+// )
+// const GvmData = defineAsyncComponent(() =>
+//     import('./menus/data.vue')
+// )
+const showComment = ref("alert")
 
 
 onMounted(() => {
@@ -118,10 +124,10 @@ const loadMenu = (bigMenu, index, flag) => {
     case "data":
       showComment.value = "data"
 
-  break;
+    break;
       case "alert":
       showComment.value = "alert"
-      router.push("/dashboard")
+      //router.push("/dashboard")
       break;
     case "deal":
       showComment.value = "deal"

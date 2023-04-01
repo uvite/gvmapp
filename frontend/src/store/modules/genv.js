@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import tool from "@/utils/tool";
 
-const useGenvStore = defineStore('bots', {
+const useGenvStore = defineStore('genv', {
 
   state: () => ({
     auth: undefined,

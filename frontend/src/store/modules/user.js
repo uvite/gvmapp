@@ -3,7 +3,7 @@ import loginApi from '@/api/login'
 import tool from '@/utils/tool'
 import router from '@/router'
 import webRouter from '@/router/webRouter'
-import diyRouter from '@/router/diyRouter'
+
 import homePageRoutes ,{ homePage } from '@/router/homePageRoutes'
 import { useAppStore } from '@/store'
 import djson from "@/store/modules/data.json"

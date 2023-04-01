@@ -54,9 +54,14 @@ func main() {
 		Height:            768,   // 启动高度
 		MinWidth:          1100,  // 最小宽度
 		MinHeight:         768,   // 最小高度
-		HideWindowOnClose: true,  // 关闭的时候隐藏窗口
+		HideWindowOnClose: false, // 关闭的时候隐藏窗口
 		StartHidden:       false, // 启动的时候隐藏窗口 （建议生产环境关闭此项，开发环境开启此项，原因自己体会）
 		AlwaysOnTop:       false, // 窗口固定在最顶层
+
+		DisableResize: false,
+		Fullscreen:    false,
+		Frameless:     false,
+
 		AssetServer: &assetserver.Options{
 			Assets:  assets,
 			Handler: NewFileLoader(),
@@ -85,6 +90,7 @@ func main() {
 			DisableFramelessWindowDecorations: false,
 			WebviewUserDataPath:               "",
 		},
+		 
 		Mac: &mac.Options{
 			TitleBar: &mac.TitleBar{
 				TitlebarAppearsTransparent: false,

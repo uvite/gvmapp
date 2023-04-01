@@ -56,12 +56,13 @@
 </template>
 <script setup>
 
-import {onMounted, ref, reactive} from 'vue';
+import {onMounted,onActivated, ref, reactive} from 'vue';
 
 import NewTask from './newTask.vue'
 import {emitter} from "@/utils/bus";
 import {useGenvStore} from '@/store'
-
+// import {OnDOMContentLoaded} from "../wailsjs/go/gvmapp/App"
+import rpc from '@/rpc'
 const genvStore = useGenvStore()
 const options = ref({
   symbol: "ETHUSDT",
@@ -135,6 +136,32 @@ const handleCancel = () => {
   visible.value = false;
 }
 
+onActivated(() => {
+  load()
+  nextTick(() => {
+    rpc.on('shortcut.view.refresh', () => {
+      if (route.name === 'dashboard') load()
+    })
+    rpc.on('shortcut.view.hard-refresh', () => {
+      if (route.name === 'start') {
+        store.documents = []
+        load()
+      }
+    })
+  })
+})
+
+async function load() {
+  rpc.setPageTitle('dashboard')
+
+  // projects.value = []
+  //
+  // store.documents.forEach(async (file) => {
+  //   const contents = await rpc.FileSystemService.ReadFileContents(file)
+  //   const collection = types.Collection.createFrom(JSON.parse(contents))
+  //   projects.value = [...projects.value, collection]
+  // })
+}
 onMounted(() => {
 
   emitter.on('symbolChange', (data) => {
@@ -147,7 +174,13 @@ onMounted(() => {
     getData()
 
   })
- getData()
+  // EventsOn("alertList",function(data){
+  //   alert(JSON.stringify(data))
+  //   console.log(data)
+  // })
+ // rpc.setPageTitle("Review & Export")
+
+  //getData()
 
 })
 

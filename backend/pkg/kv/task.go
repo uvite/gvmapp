@@ -193,7 +193,7 @@ func (s *Service) FindTasks(ctx context.Context, filter taskmodel.TaskFilter) ([
 	var ts []*taskmodel.Task
 	err := s.kv.View(ctx, func(tx Tx) error {
 		tasks, _, err := s.findTasks(ctx, tx, filter)
-		fmt.Println("[tasks]", tasks)
+		fmt.Println("[tasks]", tasks, err)
 		if err != nil {
 			return err
 		}

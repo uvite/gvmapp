@@ -164,6 +164,7 @@ func (a *App) OnDOMReady(ctx context.Context) {
 	runtime.EventsOn(a.Ctx, "test", func(optionalData ...interface{}) {
 		a.Log.Info(optionalData...)
 	})
+	runtime.EventsEmit(a.Ctx, "alertList", a.GetAlertList())
 
 }
 func (a *App) OnDOMContentLoaded(arg1 string) string {

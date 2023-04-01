@@ -21,7 +21,8 @@ import * as common from '@/utils/common'
 import packageJson from '../package.json'
 import formCreate from "@form-create/arco-design";
 import install from "@form-create/arco-design/auto-import";
-import {OnDOMContentLoaded} from "../wailsjs/go/gvmapp/App"
+import rpc from '@/rpc'
+
 import { emitter } from '@/utils/bus.js'
 formCreate.use(install);
 
@@ -50,7 +51,7 @@ app.config.globalProperties.$common = common
 app.config.globalProperties.$title = import.meta.env.VITE_APP_TITLE
 
 document.addEventListener('DOMContentLoaded', (event) => {
-    OnDOMContentLoaded('App running').then((result) => console.log(result));
+    rpc.app.OnDOMContentLoaded('App running').then((result) => console.log(result));
     app.mount('#app')
     emitter.emit('appRun', "")
 

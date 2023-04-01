@@ -69,7 +69,10 @@ func (a *App) AddAlertItem(item taskmodel.Task) *util.Resp {
 func (a *App) GetAlertList() *util.Resp {
 
 	filter := taskmodel.TaskFilter{}
+	fmt.Println(111)
 	task, total, err := a.Launcher.KvService.FindTasks(a.Ctx, filter)
+	fmt.Println(2222, task, total, err)
+
 	if err != nil {
 		fmt.Println(err)
 		return util.Error(err.Error())

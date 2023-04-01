@@ -108,7 +108,7 @@ func (a *App) CreateNotebook(dirName string) RespDate {
 func (a *App) GetDirs() RespDate {
 	dirs := make([]string, 0)
 	files := make([]string, 0)
- 
+
 	localData := util.GetLocalDir()
 
 	fs, err := ioutil.ReadDir(localData)

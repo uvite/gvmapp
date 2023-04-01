@@ -5,7 +5,7 @@ import tool from '@/utils/tool'
 import 'nprogress/nprogress.css'
 
 import routes from './webRouter.js'
-import diyRouter from './diyRouter.js'
+import AppPage from './appRoutes.js'
 
 const title = import.meta.env.VITE_APP_TITLE
 const defaultRoutePath = '/'
@@ -15,7 +15,7 @@ const router = createRouter({
   history: createWebHashHistory(),
   routes
 })
-router.push(diyRouter)
+router.push(AppPage)
 
 router.beforeEach(async (to, from, next) => {
   NProgress.start()
