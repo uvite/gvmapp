@@ -7,7 +7,6 @@ import (
 	"github.com/uvite/gvmapp/backend/util"
 	"github.com/uvite/gvmbot/pkg/bbgo"
 	"github.com/uvite/gvmbot/pkg/types"
-	"sync"
 )
 
 type SymbolInterval struct {
@@ -23,16 +22,14 @@ var (
 
 type ExchangeService struct {
 	Ctx      context.Context
-	wg       sync.WaitGroup
-	cancel   func()
-	doneChan <-chan struct{}
+
 	Exchange *gvmbot.Exchange
 }
 
 func NewExchangeService() *ExchangeService {
 
 	exchangeService := &ExchangeService{}
-	exchangeService.InitExchange()
+
 	return exchangeService
 }
 func (l *ExchangeService) Run() {
@@ -40,7 +37,7 @@ func (l *ExchangeService) Run() {
 }
 
 // 初始化交易所
-func (eb *ExchangeService) InitExchange() {
+func (e *ExchangeService) Init() {
 
 	filepath := fmt.Sprintf("%s/%s", util.GetEnvDir(), ".env.local")
 	configpath := fmt.Sprintf("%s/%s", util.GetEnvDir(), "bbgo.yaml")
@@ -60,7 +57,7 @@ func (eb *ExchangeService) InitExchange() {
 	s.SetPublicOnly()
 	ex.Stream = s
 	ex.Session = session
-	eb.Exchange = ex
+	e.Exchange = ex
 
 }
 

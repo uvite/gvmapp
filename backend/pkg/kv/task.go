@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	taskmodel "github.com/uvite/gvmapp/backend/pkg/model"
 	"strings"
 	"time"
@@ -471,6 +472,7 @@ func (s *Service) CreateTask(ctx context.Context, tc taskmodel.TaskCreate) (*tas
 		task, err := s.createTask(ctx, tx, tc)
 
 		if err != nil {
+			log.Error(err)
 			return err
 		}
 		t = task
@@ -513,11 +515,13 @@ func (s *Service) createTask(ctx context.Context, tx Tx, tc taskmodel.TaskCreate
 
 	taskBucket, err := tx.Bucket(taskBucket)
 	if err != nil {
+		log.Error(err)
 		return nil, taskmodel.ErrUnexpectedTaskBucketErr(err)
 	}
 
 	indexBucket, err := tx.Bucket(taskIndexBucket)
 	if err != nil {
+		log.Error(err)
 		return nil, taskmodel.ErrUnexpectedTaskBucketErr(err)
 	}
 
@@ -525,6 +529,7 @@ func (s *Service) createTask(ctx context.Context, tx Tx, tc taskmodel.TaskCreate
 	taskBytes, err := json.Marshal(task)
 
 	if err != nil {
+		log.Error(err)
 		return nil, taskmodel.ErrInternalTaskServiceError(err)
 	}
 
@@ -535,6 +540,7 @@ func (s *Service) createTask(ctx context.Context, tx Tx, tc taskmodel.TaskCreate
 
 	orgKey, err := taskOrgKey(task.OrganizationID, task.ID)
 	if err != nil {
+		log.Error(err)
 		return nil, err
 	}
 
@@ -550,22 +556,9 @@ func (s *Service) createTask(ctx context.Context, tx Tx, tc taskmodel.TaskCreate
 	// write the org index
 	err = indexBucket.Put(orgKey, taskKey)
 	if err != nil {
+		log.Error(err)
 		return nil, taskmodel.ErrUnexpectedTaskBucketErr(err)
 	}
-
-	//uid, _ := icontext.GetUserID(ctx)
-	//if err := s.audit.Log(resource.Change{
-	//	Type:           resource.Create,
-	//	ResourceID:     task.ID,
-	//	ResourceType:   influxdb.TasksResourceType,
-	//	OrganizationID: task.OrganizationID,
-	//	UserID:         uid,
-	//	ResourceBody:   taskBytes,
-	//	Time:           time.Now(),
-	//}); err != nil {
-	//	return nil, err
-	//}
-
 	return task, nil
 }
 

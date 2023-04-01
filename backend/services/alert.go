@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/influxdata/influxdb/v2"
+	log "github.com/sirupsen/logrus"
 	"github.com/uvite/gvmapp/backend/pkg/launcher"
 	taskmodel "github.com/uvite/gvmapp/backend/pkg/model"
 	"github.com/uvite/gvmapp/backend/pkg/platform"
@@ -21,34 +22,51 @@ type AlertService struct {
 }
 
 func NewAlertService() *AlertService {
-	return &AlertService{}
+	alert := &AlertService{}
+
+	return alert
 }
+
 func (l *AlertService) SetLauncher(service *LauncherService) {
+	log.Info("alert setLauncher ")
+
 	l.Launcher = service.Launcher
 }
+func (l *AlertService) Listen() {
+	log.Info("alert Listening ")
+	runtime.EventsOn(l.Ctx, "service.alert.getall", func(optionalData ...interface{}) {
+		l.GetAlertList()
+	})
+}
+
 func (a *AlertService) GetAlertList() *util.Resp {
+	log.Info("get alert List ", a.Launcher.Runing)
 
 	filter := taskmodel.TaskFilter{}
+	if a.Launcher.Runing {
+		task, total, err := a.Launcher.KvService.FindTasks(a.Ctx, filter)
 
-	task, total, err := a.Launcher.KvService.FindTasks(a.Ctx, filter)
+		if err != nil {
 
-	if err != nil {
+			return util.Error(err.Error())
+		}
 
-		return util.Error(err.Error())
+		resultMap := make(map[string]interface{}, 0)
+		resultMap["list"] = task
+		resultMap["total"] = total
+
+		runtime.EventsEmit(a.Ctx, "service.alert.all", task)
+		util.Success(resultMap)
 	}
-	fmt.Println(total)
-
-	resultMap := make(map[string]interface{}, 0)
-	resultMap["list"] = task
-
-	return util.Success(resultMap)
+	return util.Error(fmt.Sprintf("启动失败"))
 }
 
 // 创建警报
 func (a *AlertService) CreateAlert(item taskmodel.Task) *util.Resp {
 
 	Org := influxdb.Organization{Name: "gvm", ID: (1)}
-
+	//log.Info("[task create] %+v", item)
+	//log.Info("[task launcheer] %+v", a.Launcher)
 	task, err := a.Launcher.KvService.CreateTask(a.Ctx, taskmodel.TaskCreate{
 		OrganizationID: platform.ID(Org.ID),
 		OwnerID:        platform.ID(Org.ID),
@@ -60,9 +78,16 @@ func (a *AlertService) CreateAlert(item taskmodel.Task) *util.Resp {
 		Content:        item.Content,
 		Metadata:       item.Metadata,
 	})
-	err = createJs(*task)
-	fmt.Println(task, err)
-	runtime.EventsEmit(a.Ctx, "service.alert.create", task)
+
+	if err != nil {
+		log.Error("[task create err] ", err)
+
+		return util.Error(err.Error())
+	} else {
+		createJs(*task)
+
+	}
+	//runtime.EventsEmit(a.Ctx, "service.alert.create", task)
 	return util.Success(task)
 
 }
@@ -84,7 +109,9 @@ func createJs(task taskmodel.Task) error {
 
 	destFilePath := filepath.Join(configData, "js", (task.ID.String() + ".js"))
 	setupData, err := json.Marshal(task.Metadata)
+	log.Info(destFilePath)
 	if err != nil {
+		log.Error(err)
 		return err
 	}
 
@@ -98,7 +125,9 @@ func createJs(task taskmodel.Task) error {
 
 	err = ioutil.WriteFile(destFilePath, []byte(content), os.ModePerm)
 	os.Chmod(destFilePath, os.ModePerm)
+	fmt.Println("asdfasdf", err)
 	if err != nil {
+		log.Error(err)
 		return err
 	}
 	return nil

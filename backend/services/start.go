@@ -3,13 +3,18 @@ package services
 import (
 	"context"
 	"fmt"
+	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
+	"github.com/rifflock/lfshook"
+	log "github.com/sirupsen/logrus"
 	"github.com/studio-b12/gowebdav"
 	"github.com/uvite/gvmapp/backend/lib"
 	"github.com/uvite/gvmapp/backend/util"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
+	"time"
 )
 
 type StartService struct {
@@ -17,13 +22,45 @@ type StartService struct {
 }
 
 func NewStartService() *StartService {
-	return &StartService{}
+	start := &StartService{}
+	start.SetLog()
+	return start
 }
 
 var client = gowebdav.NewClient("https://dav.jianguoyun.com/dav/",
 	"airwms@126.com", "anpjd37an6vg65qv")
 
 // 同步到本地
+func (f *StartService) SetLog() {
+	logDir := "log"
+	if err := os.MkdirAll(logDir, 0777); err != nil {
+		log.Panic(err)
+	}
+	writer, err := rotatelogs.New(
+		path.Join(logDir, "access_log.%Y%m%d"),
+		rotatelogs.WithLinkName("access_log"),
+		// rotatelogs.WithMaxAge(24 * time.Hour),
+		rotatelogs.WithRotationTime(time.Duration(24)*time.Hour),
+	)
+	if err != nil {
+		log.Panic(err)
+	}
+	logger := log.StandardLogger()
+	logger.AddHook(
+		lfshook.NewHook(
+			lfshook.WriterMap{
+				log.DebugLevel: writer,
+				log.InfoLevel:  writer,
+				log.WarnLevel:  writer,
+				log.ErrorLevel: writer,
+				log.FatalLevel: writer,
+			},
+			&log.JSONFormatter{},
+		),
+	)
+	log.Infof("debug mode is enabled")
+	log.SetLevel(log.DebugLevel)
+}
 func (f *StartService) DownToLocal() util.RespDate {
 	folders := make([]string, 0)
 	localData := util.GetLocalDir()

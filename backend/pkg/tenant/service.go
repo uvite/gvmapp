@@ -2,9 +2,9 @@ package tenant
 
 import (
 	"context"
+	"go.uber.org/zap"
 
 	"github.com/influxdata/influxdb/v2"
-	"go.uber.org/zap"
 )
 
 type contextKey string

@@ -43,7 +43,7 @@
         </template>
         <template #second>
           {{ symint }}
-          <a-button type="primary" status="success" @click="create">测试</a-button>
+          <a-button type="primary" status="success" @click="test">测试</a-button>
 
         </template>
       </a-split>
@@ -78,52 +78,44 @@ let symint = genvStore.getGenv()
 if (symint) {
   options.value = symint
 }
-const app = ref(window.go.gvmapp.App)
+
 const editRef = ref()
 const show = ref(true)
 const sizeList = ref('small');
 const size = ref(0.5)
 const data = ref([])
 
-// const create = (record) => {
-//
-//   runtime.EventsEmit(a.Ctx, "service.alert.create", item)
-//
-// }
+const create = async () => {
+
+  // runtime.EventsEmit(a.Ctx, "service.alert.create", item)
+
+  rpc.emit("service.alert.getall")
+  // const res = await rpc.AlertService.GetAlertList()
+  // alert(JSON.stringify(res))
+}
 
 
-const runBot = (record) => {
-  app.value.RunAlert(record.id).then(res => {
+const runBot =async (record) => {
+  console.log("record.id",record.id)
+   const res= await rpc.LauncherService.RunTask(record)
+  console.log(res)
+  // app.value.RunAlert(record.id).then(res => {
+  //   console.log(res)
+  //
+  // })
+}
+const closeBot =async (record) => {
+  const res= await rpc.LauncherService.CloseTask(record)
+  console.log(res)
+}
+
+const deleteR = async (record) => {
+  await rpc.AlertService.DelAlertItem(record.id).then(res => {
     console.log(res)
-
-  })
-}
-const closeBot = (record) => {
-  app.value.CloseAlert(record.id).then(res => {
-    console.log(res)
-
-  })
-}
-const deleteR = (record) => {
-  console.log(record)
-  app.value.DelAlertItem(record.id).then(res => {
-    getData()
-
+    rpc.emit("service.alert.getall")
   })
 }
 
-
-const getData = () => {
-  app.value.GetAlertList().then(res => {
-
-    if (res.code == 200) {
-      data.value = res.data.list
-
-    } else {
-      message.error(res.msg)
-    }
-  })
-}
 
 const visible = ref(false);
 
@@ -131,48 +123,33 @@ const visible = ref(false);
 const createAlert = () => {
   visible.value = true;
 };
+
 const handleBeforeOk = async (done) => {
-  alert(333)
+
   options.value.metadata = editRef.value.form
   options.value.content = editRef.value.code
+  const res = await rpc.AlertService.CreateAlert(options.value)
 
   done()
-  console.log(options.value)
-  const res= await arpc.AlertService.CreateAlert(options.value)
-  //let res = app.value.AddAlertItem(options.value)
-  alert(res)
-  console.log("[3333]", res)
-  getData()
+  rpc.emit("service.alert.getall")
 
 };
 const handleCancel = () => {
   visible.value = false;
 }
 
-onActivated(() => {
-  alert(333)
-  load()
-  nextTick(() => {
-    rpc.on('shortcut.view.refresh', () => {
-      if (route.name === 'dashboard') load()
-    })
-    rpc.on('shortcut.view.hard-refresh', () => {
-      if (route.name === 'start') {
-        store.documents = []
-        load()
-      }
-    })
-  })
-})
-
 async function load() {
 
   rpc.setPageTitle('K线助手')
   try {
     const res = await rpc.AlertService.GetAlertList()
-    data.value = res.data.list
+    console.log("alert all",JSON.stringify(res))
+    if (res.code == 200) {
+      data.value = res.data.list
+    }
+
   } catch (e) {
-    alert(e)
+    console.log("eee",e)
   }
   emitter.on('symbolChange', (data) => {
     options.value = data
@@ -184,11 +161,18 @@ async function load() {
 }
 
 onMounted(() => {
-
-
   load()
-
-
+  rpc.on('service.alert.all', (res) => {
+    console.log(res)
+    if (res) {
+      data.value = res
+    }else{
+      data.value=[]
+    }
+  })
+  rpc.on('service.alert.create', (res) => {
+    console.log("service.alert.create", res)
+  })
 })
 
 </script>

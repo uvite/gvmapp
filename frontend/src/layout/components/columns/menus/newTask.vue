@@ -86,6 +86,7 @@ const showMa = ref(false)
 
 
 const noteSelect = (key, keyPath) => {
+  dataLoading.value=true
   console.log("选中key：" + key);
   options.value.init = false
   // columns.value = []
@@ -107,6 +108,7 @@ const noteSelect = (key, keyPath) => {
       }
       columns.value = ui
       showMa.value = true
+      dataLoading.value=false
       // Object.assign(columns, ui)
       // mdText.value = data;
       //console.log("[1]",data)
@@ -122,7 +124,7 @@ const noteSelect = (key, keyPath) => {
 
 }
 const save = async (done) => {
-  alert(JSON.stringify(form.value))
+  //alert(JSON.stringify(form.value))
   done(true)
 }
 

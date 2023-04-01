@@ -78,15 +78,15 @@ const deleteR = (record) => {
   })
 }
 const getData = () => {
-  app.value.GetAlertList().then(res => {
-    console.log(res)
-    if (res.code == 200) {
-      data.value = res.data.list
-
-    } else {
-      //message.error(res.msg)
-    }
-  })
+  // app.value.GetAlertList().then(res => {
+  //   console.log(res)
+  //   if (res.code == 200) {
+  //     data.value = res.data.list
+  //
+  //   } else {
+  //     //message.error(res.msg)
+  //   }
+  // })
 }
 
 const visible = ref(false);

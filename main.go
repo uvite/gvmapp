@@ -82,6 +82,7 @@ func main() {
 			app.LauncherService,
 			app.ExchangeService,
 			app.AlertService,
+			app.PoolService,
 		},
 		// Windows platform specific options
 		Windows: &windows.Options{

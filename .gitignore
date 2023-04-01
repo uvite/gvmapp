@@ -20,3 +20,5 @@ frontend/src/wailsjs
 frontend/src/*.json
 frontend/src/*.txt
 frontend/src/*.map
+log
+access_log

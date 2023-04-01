@@ -3,19 +3,17 @@ package launcher
 import (
 	"context"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	platform "github.com/influxdata/influxdb/v2"
 	"github.com/influxdata/influxdb/v2/http"
+	"github.com/influxdata/influxdb/v2/kit/feature"
 	sqliteMigrations "github.com/influxdata/influxdb/v2/sqlite/migrations"
+	log "github.com/sirupsen/logrus"
 	"github.com/uvite/gvmapp/backend/pkg/bolt"
 	"github.com/uvite/gvmapp/backend/pkg/bot"
 	"github.com/uvite/gvmapp/backend/pkg/kv/migration"
 	"github.com/uvite/gvmapp/backend/pkg/kv/migration/all"
 	taskmodel "github.com/uvite/gvmapp/backend/pkg/model"
-	nethttp "net/http"
-	"time"
-
-	"github.com/influxdata/influxdb/v2/kit/feature"
+	"go.uber.org/zap"
 
 	"github.com/influxdata/influxdb/v2/kit/prom"
 	"github.com/influxdata/influxdb/v2/kit/tracing"
@@ -41,7 +39,7 @@ import (
 	pzap "github.com/influxdata/influxdb/v2/zap"
 	"github.com/opentracing/opentracing-go"
 	jaegerconfig "github.com/uber/jaeger-client-go/config"
-	"go.uber.org/zap"
+
 )
 
 const (
@@ -82,8 +80,9 @@ type Launcher struct {
 
 	httpPort int
 
-	TSC   taskmodel.TaskService
-	Exbot *bot.Exbot
+	TSC    taskmodel.TaskService
+	Exbot  *bot.Exbot
+	Runing bool
 }
 
 type stoppingScheduler interface {
@@ -93,8 +92,10 @@ type stoppingScheduler interface {
 
 // NewLauncher returns a new instance of Launcher with a no-op logger.
 func NewLauncher() *Launcher {
+
 	return &Launcher{
-		log: zap.NewNop(),
+		Runing: false,
+		log:    zap.NewNop(),
 	}
 }
 
@@ -139,14 +140,14 @@ func (m *Launcher) Run(ctx context.Context, opts *InfluxdOpts) (err error) {
 	m.doneChan = ctx.Done()
 
 	m.initTracing(opts)
-	fmt.Println("adfadsf", opts)
+
 	// Open KV and SQL stores.
 	procID, err := m.openMetaStores(ctx, opts)
-	fmt.Println("[fuck]", err)
+
 	if err != nil {
 		return err
 	}
-	fmt.Println(procID)
+	log.Info("launcher procID", procID)
 
 	tenantStore := tenant.NewStore(m.kvStore)
 	ts := tenant.NewSystem(tenantStore, m.log.With(zap.String("store", "new")))
@@ -174,25 +175,28 @@ func (m *Launcher) Run(ctx context.Context, opts *InfluxdOpts) (err error) {
 			m.Exbot,
 		)
 		err = executor.LoadExistingScheduleRuns(ctx)
-		fmt.Println(444, err)
+		log.Error("executor load task", err)
+
 		if err != nil {
 			m.log.Fatal("could not load existing scheduled runs", zap.Error(err))
 		}
 		m.Executor = executor
 	}
-	fmt.Println(333)
+
 	m.TSC = taskSvc
+	m.Runing = true
+	log.Info("launcher running ", m.Runing)
 
 	//errorHandler := kithttp.NewErrorHandler(m.log.With(zap.String("handler", "error_logger")))
-	Router := gin.Default()
-	Router.GET("/", func(c *gin.Context) {
-		time.Sleep(5 * time.Second)
-		c.String(nethttp.StatusOK, "Welcome Gin Server")
-	})
-
-	if err := m.runHTTP(opts, Router); err != nil {
-		return err
-	}
+	//Router := gin.Default()
+	//Router.GET("/", func(c *gin.Context) {
+	//	time.Sleep(5 * time.Second)
+	//	c.String(nethttp.StatusOK, "Welcome Gin Server")
+	//})
+	//
+	//if err := m.runHTTP(opts, Router); err != nil {
+	//	return err
+	//}
 
 	return nil
 }

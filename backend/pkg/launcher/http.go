@@ -107,15 +107,15 @@ func (m *Launcher) runHTTP(opts *InfluxdOpts, router *gin.Engine) error {
 	})
 
 	router.GET("/api/cancel", func(c *gin.Context) {
-
-		id := c.Query("id")
-
-		pid, _ := platform.IDFromString(id)
-		err := m.Executor.Cancel(c, *pid)
-		fmt.Println(err)
-		if err != nil {
-			FailWithMessage("获取失败", c)
-		}
+		//
+		//id := c.Query("id")
+		//
+		//pid, _ := platform.IDFromString(id)
+		//err := m.Executor.Cancel(c, *pid)
+		//fmt.Println(err)
+		//if err != nil {
+		//	FailWithMessage("获取失败", c)
+		//}
 		OkWithDetailed("task", "获取成功", c)
 	})
 

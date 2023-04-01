@@ -3,9 +3,11 @@ package executor
 import (
 	"context"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"github.com/uvite/gvmapp/backend/pkg/backend"
 	"github.com/uvite/gvmapp/backend/pkg/bot"
 	"github.com/uvite/gvmapp/backend/pkg/platform"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 
 	"github.com/influxdata/influxdb/v2/kit/tracing"
 	"github.com/influxdata/influxdb/v2/query"
@@ -15,7 +17,7 @@ import (
 	"time"
 )
 
-type Promise interface {
+type IPromise interface {
 	ID() platform.ID
 	Cancel(ctx context.Context)
 	Done() <-chan struct{}
@@ -29,15 +31,14 @@ const (
 	lastSuccessOption = "tasks.lastSuccessTime"
 )
 
-// promise represents a promise the executor makes to finish a run's execution asynchronously.
-type promise struct {
-	Id    platform.ID
-	run   *taskmodel.Run
-	task  *taskmodel.Task
-	Exbot *bot.Exbot
-	done  chan struct{}
-	err   error
-	bot   *bot.Deskbot
+// Promise represents a Promise the executor makes to finish a run's execution asynchronously.
+type Promise struct {
+	Id   platform.ID
+	run  *taskmodel.Run
+	Task *taskmodel.Task
+
+	done chan struct{}
+	err  error
 
 	createdAt time.Time
 	startedAt time.Time
@@ -48,16 +49,16 @@ type promise struct {
 }
 
 // ID is the id of the run that was created
-func (p *promise) ID() platform.ID {
+func (p *Promise) ID() platform.ID {
 	return p.run.ID
 }
-func (p *promise) initBot() {
-	p.bot = bot.NewBot(p.ctx, *p.task, p.Exbot)
+func (p *Promise) initBot() {
+	//p.bot = bot.NewBot(p.ctx, *p.task, p.Exbot)
 
 }
 
 // Cancel is used to cancel a executing query
-func (p *promise) Cancel(ctx context.Context) {
+func (p *Promise) Cancel(ctx context.Context) {
 	// call cancelfunc
 	p.cancelFunc()
 
@@ -69,13 +70,13 @@ func (p *promise) Cancel(ctx context.Context) {
 }
 
 // Done provides a channel that closes on completion of a promise
-func (p *promise) Done() <-chan struct{} {
+func (p *Promise) Done() <-chan struct{} {
 	return p.done
 }
 
 // Error returns the error resulting from a run execution.
 // If the execution is not complete error waits on Done().
-func (p *promise) Error() error {
+func (p *Promise) Error() error {
 	<-p.done
 	return p.err
 }
@@ -93,8 +94,8 @@ type Executor struct {
 	// futurePromises are promises that are scheduled to be executed in the future
 	currentCancel sync.Map
 
-	// keep a pool of promise's we have in queue
-	promiseQueue chan *promise
+	// keep a pool of Promise's we have in queue
+	promiseQueue chan *Promise
 
 	// keep a pool of execution workers.
 	workerPool  sync.Pool
@@ -113,7 +114,7 @@ func NewExecutor(log *zap.Logger, ts taskmodel.TaskService, eb *bot.Exbot) *Exec
 
 		currentPromises: sync.Map{},
 		currentCancel:   sync.Map{},
-		promiseQueue:    make(chan *promise, maxPromises),
+		promiseQueue:    make(chan *Promise, maxPromises),
 		workerLimit:     make(chan struct{}, 100),
 	}
 
@@ -152,40 +153,37 @@ func (e *Executor) startWorker() {
 	}
 }
 
-// Cancel a run of a specific task.
-func (e *Executor) Cancel(ctx context.Context, runID platform.ID) error {
-	// find the promise
-	val, ok := e.currentPromises.Load(runID)
-	if !ok {
-		return nil
-	}
-	promise := val.(*promise)
-
-	// call cancel on it.
-	promise.Cancel(ctx)
-
-	return nil
-}
+//// Cancel a run of a specific task.
+//func (e *Executor) Cancel(ctx context.Context, runID platform.ID) error {
+//	// find the promise
+//	val, ok := e.currentPromises.Load(runID)
+//	if !ok {
+//		return nil
+//	}
+//	promise := val.(*Promise)
+//
+//	// call cancel on it.
+//	promise.Cancel(ctx)
+//
+//	return nil
+//}
 
 func (e *Executor) Close(ctx context.Context, runID platform.ID) error {
 	// find the promise
 	val, ok := e.currentPromises.Load(runID)
-	ddd, _ := e.currentCancel.Load(runID)
+	close, _ := e.currentCancel.Load(runID)
 	if !ok {
 		return nil
 	}
-
-	promise := val.(*promise)
-	aaa := ddd.(context.CancelFunc)
-
-	aaa()
-
+	promise := val.(*Promise)
+	close.(context.CancelFunc)()
 	promise.ctx.Done()
+	log.Info("task close", runID)
 
 	return nil
 }
 
-func (e *Executor) createPromise(ctx context.Context, id platform.ID) (*promise, error) {
+func (e *Executor) createPromise(ctx context.Context, id platform.ID) (*Promise, error) {
 	span, ctx := tracing.StartSpanFromContext(ctx)
 	defer span.Finish()
 
@@ -196,10 +194,10 @@ func (e *Executor) createPromise(ctx context.Context, id platform.ID) (*promise,
 
 	ctx, cancel := context.WithCancel(ctx)
 	// create promise
-	p := &promise{
-		Id:         id,
-		Exbot:      e.Exbot,
-		task:       t,
+	p := &Promise{
+		Id: id,
+		//Exbot:      e.Exbot,
+		Task:       t,
 		createdAt:  time.Now().UTC(),
 		done:       make(chan struct{}),
 		ctx:        ctx,
@@ -221,7 +219,7 @@ func (e *Executor) createPromise(ctx context.Context, id platform.ID) (*promise,
 // We then want to add to the queue anything that was manually queued to run.
 // If the queue is full the call to execute should hang and apply back pressure to the caller
 // We then start a worker to work the newly queued jobs.
-func (e *Executor) PromisedExecute(ctx context.Context, id platform.ID) (Promise, error) {
+func (e *Executor) PromisedExecute(ctx context.Context, id platform.ID) (IPromise, error) {
 
 	// create a run
 	p, err := e.createPromise(ctx, id)
@@ -245,10 +243,10 @@ func (e *Executor) LoadExistingScheduleRuns(ctx context.Context) error {
 
 		ctx, cancel := context.WithCancel(ctx)
 		// create promise
-		p := &promise{
-			Id:         t.ID,
-			Exbot:      e.Exbot,
-			task:       t,
+		p := &Promise{
+			Id: t.ID,
+			//Exbot:      e.Exbot,
+			Task:       t,
 			createdAt:  time.Now().UTC(),
 			done:       make(chan struct{}),
 			ctx:        ctx,
@@ -280,7 +278,7 @@ func (w *worker) work() {
 	fmt.Println("run=============")
 	// loop until we have no more work to do in the promise queue
 	for {
-		var prom *promise
+		var prom *Promise
 		// check to see if we can execute
 		select {
 		case p, ok := <-w.e.promiseQueue:
@@ -291,12 +289,14 @@ func (w *worker) work() {
 				return
 			}
 			prom = p
-			prom.initBot()
-			prom.bot.OnklineClose()
-			prom.bot.Onkline()
-
-			fmt.Println("pppppp", prom.Id)
-			w.e.currentCancel.Store(prom.Id, prom.bot.Gvm.CancelFun)
+			runtime.EventsEmit(p.ctx, "service.pool.startbot", prom)
+			//prom.initBot()
+			//prom.bot.OnklineClose()
+			//prom.bot.Onkline()
+			//
+			//fmt.Println("pppppp", prom.Id)
+			w.e.currentCancel.Store(prom.Id, prom.cancelFunc)
+			//w.e.currentCancel.Store(prom.Id, prom.bot.Gvm.CancelFun)
 
 		default:
 			fmt.Println("44444")
@@ -311,18 +311,21 @@ func (w *worker) work() {
 			select {
 			// If done the promise was canceled
 			case <-prom.ctx.Done():
-				prom.bot.Gvm.CancelFun()
-				fmt.Println("324324")
+				//prom.bot.Gvm.CancelFun()
+				fmt.Println("prom close")
+				log.Info("promise close", prom.Id)
 				//prom.bot.Gvm
+				runtime.EventsEmit(prom.ctx, "service.pool.closebot", prom)
+
 				prom.err = taskmodel.ErrRunCanceled
 				close(prom.done)
 				return
-			case <-time.After(15 * time.Second):
-				fmt.Println("running")
-				prom.bot.Gvm.Run()
+			case <-time.After(10 * time.Second):
+				fmt.Println("running", prom.Id)
+				//prom.bot.Gvm.Run()
 			}
 		}
-
+		log.Info("promise running", prom.Id)
 		//fmt.Println("[prom]", prom)
 		// execute the promise
 		//w.executeQuery(prom)
@@ -335,7 +338,7 @@ func (w *worker) work() {
 	}
 }
 
-func (w *worker) start(p *promise) {
+func (w *worker) start(p *Promise) {
 	// trace
 	span, ctx := tracing.StartSpanFromContext(p.ctx)
 	defer span.Finish()
@@ -344,15 +347,15 @@ func (w *worker) start(p *promise) {
 	p.startedAt = time.Now()
 }
 
-func (w *worker) finish(p *promise, rs taskmodel.RunStatus, err error) {
+func (w *worker) finish(p *Promise, rs taskmodel.RunStatus, err error) {
 	span, ctx := tracing.StartSpanFromContext(p.ctx)
 	defer span.Finish()
 	fmt.Println(ctx)
 
 }
 
-func (w *worker) executeQuery(p *promise) {
-	go p.bot.Gvm.Run()
+func (w *worker) executeQuery(p *Promise) {
+	//go p.bot.Gvm.Run()
 	//nb := bot.NewBot(p.ctx, *p.task, p.Exbot)
 	//fmt.Printf("333333333\n%+v", p.task)
 	////nb.Onkline()

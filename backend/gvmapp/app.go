@@ -8,13 +8,9 @@ import (
 	"fmt"
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 	"github.com/sirupsen/logrus"
-	"github.com/uvite/gvmapp/backend/configs"
-	"github.com/uvite/gvmapp/backend/internal"
+	"github.com/uvite/gvmapp/backend/gvmbot"
 	"github.com/uvite/gvmapp/backend/pkg/bot"
 	"github.com/uvite/gvmapp/backend/pkg/launcher"
-	"github.com/uvite/gvmapp/backend/util"
-
-	"github.com/uvite/gvmapp/backend/gvmbot"
 	"image"
 	"os"
 	"path/filepath"
@@ -49,16 +45,20 @@ type App struct {
 	LauncherService *services.LauncherService
 	ExchangeService *services.ExchangeService
 	AlertService    *services.AlertService
+	PoolService     *services.PoolService
 }
 
 // NewApp creates a new App application struct
 func NewApp() *App {
-	return &App{
+	app := &App{
 		StartService:    services.NewStartService(),
 		LauncherService: services.NewLauncherService(),
 		AlertService:    services.NewAlertService(),
 		ExchangeService: services.NewExchangeService(),
+		PoolService:     services.NewPoolService(),
 	}
+	//app.AlertService.SetLauncher(app.LauncherService)
+	return app
 }
 
 // Startup is called at application Startup
@@ -66,20 +66,35 @@ func (a *App) Startup(ctx context.Context) {
 	a.Ctx = ctx
 	a.StartService.Ctx = ctx
 	a.LauncherService.Ctx = ctx
+	a.PoolService.Ctx = ctx
 	a.ExchangeService.Ctx = ctx
-	a.AlertService.Ctx = ctx
+	{
+		a.ExchangeService.Init()
+	}
+	{
+		a.AlertService.Ctx = ctx
+		a.AlertService.SetLauncher(a.LauncherService)
+		a.AlertService.Listen()
+	}
+	{
+		a.LauncherService.Init()
+		//a.LauncherService.SetExchange(a.ExchangeService)
+	}
+	{
+		a.PoolService.Listen()
+		a.PoolService.SetExchange(a.ExchangeService)
+	}
 
-	a.AlertService.SetLauncher(a.LauncherService)
-
-	confDir := util.GetConfigDir()
-	util.GetEnvDir()
+	//
+	//confDir := util.GetConfigDir()
+	//util.GetEnvDir()
 	//	a.Ctx = ctx
-	a.InitLauncher()
+	//a.InitLauncher()
 	// 获取gvmapp数据文件夹路径
 
-	// 初始化logrus
-	a.LogFile = fmt.Sprintf(configs.LogFile, confDir)
-	a.Log = internal.NewLogger(a.LogFile)
+	//// 初始化logrus
+	//a.LogFile = fmt.Sprintf(configs.LogFile, confDir)
+	//a.Log = internal.NewLogger(a.LogFile)
 	//
 	//// 初始化xorm
 	//a.DBFile = fmt.Sprintf(configs.DBFile, confDir)
@@ -138,7 +153,7 @@ func (app *App) DomReady(ctx context.Context) {
 
 // Shutdown is called at application termination
 func (app *App) Shutdown(ctx context.Context) {
-	// Perform your teardown here
+	app.LauncherService.ShutDown()
 }
 
 func (app *App) Title() string {
