@@ -5,6 +5,7 @@ import (
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"github.com/uvite/gvmapp/backend/pkg/executor"
+	"github.com/uvite/gvmapp/backend/services/bot"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"sync"
 )
@@ -69,4 +70,9 @@ func (b *PoolService) CloseBot(promise *executor.Promise) {
 
 func (b *PoolService) SetExchange(service *ExchangeService) {
 	b.Exchange = service
+}
+
+func (b *PoolService) Speak(msg string) {
+	newVoice := bot.NewVoice()
+	newVoice.Alert(msg)
 }

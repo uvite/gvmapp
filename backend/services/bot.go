@@ -7,20 +7,18 @@ import (
 	"github.com/uvite/gvmapp/backend/gvmbot"
 	"github.com/uvite/gvmapp/backend/util"
 	"github.com/uvite/gvmbot/pkg/types"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 
 	"github.com/uvite/gvm/engine"
 	vite "github.com/uvite/gvm/tart/floats"
 
 	taskmodel "github.com/uvite/gvmapp/backend/pkg/model"
-	"github.com/uvite/gvmapp/backend/services/bot"
 	"path/filepath"
 
 	"time"
 )
 
-var (
-	newVoice = bot.NewVoice()
-)
+
 
 type BotService struct {
 	Ctx context.Context
@@ -44,6 +42,11 @@ type BotService struct {
 func NewBotService() *BotService {
 	Bot := &BotService{}
 	return Bot
+}
+
+func (b *BotService) alert(msg string) {
+
+	runtime.EventsEmit(b.Ctx, "service.message.alert", msg)
 }
 
 // 创建一个新的机器人
@@ -72,6 +75,7 @@ func (b *BotService) NewBot(task *taskmodel.Task) {
 	//ctx, cancel := context.WithCancel(context.Background())
 	//defer cancel()
 	gvm.Ctx = b.Ctx
+
 	gvm.Init()
 	gvm.Set("close", b.close)
 	gvm.Set("open", b.open)
@@ -82,7 +86,7 @@ func (b *BotService) NewBot(task *taskmodel.Task) {
 	gvm.Set("symbol", symbol)
 	gvm.Set("interval", interval)
 
-	gvm.Set("alert", newVoice.Alert)
+	gvm.Set("alert", b.alert)
 
 	log.Infof("gvm set", b.Symbol)
 
@@ -100,21 +104,19 @@ func (e *BotService) GetKline() {
 	log.Infof("kLines from RESTful API")
 	for _, kline := range kLines {
 		//log.Info(kline.String())
-		//fmt.Println(kline.String())
+		fmt.Println(kline.String())
 		e.close.Push(kline.Close.Float64())
 		e.high.Push(kline.High.Float64())
 		e.low.Push(kline.Low.Float64())
 		e.open.Push(kline.Open.Float64())
 		e.volume.Push(kline.Volume.Float64())
-		e.Gvm.Run()
 
 	}
 }
 
 func (e *BotService) OnklineClose() {
-	log.Info("onklineclose")
+
 	e.Exchange.Stream.OnKLineClosed(func(kline types.KLine) {
-		fmt.Println("e.Symbol", e.Symbol)
 		if kline.Symbol == e.Symbol && kline.Interval == types.Interval(e.Interval) {
 			e.close.Push(kline.Close.Float64())
 			e.high.Push(kline.High.Float64())
@@ -130,11 +132,9 @@ func (e *BotService) OnklineClose() {
 
 }
 func (e *BotService) Onkline() {
-	log.Info("Onkline")
 
 	e.Exchange.Stream.OnKLine(func(kline types.KLine) {
 
-		fmt.Println("e.Symbol kline", e.Symbol)
 		if kline.Symbol == e.Symbol && kline.Interval == types.Interval(e.Interval) {
 			if e.price.Len() > 5 {
 				e.price.Pop(0)

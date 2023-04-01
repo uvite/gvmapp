@@ -1,8 +1,9 @@
 package bot
 
 import (
-	"fmt"
+	"context"
 	"github.com/dannywolfmx/go-tts/tts"
+	"github.com/labstack/gommon/log"
 	"sync"
 	"time"
 )
@@ -13,6 +14,7 @@ const sampleRate = 27000
 type Qvm struct {
 	Voice *tts.TTS
 	Wg    sync.WaitGroup
+	Ctx   context.Context
 }
 
 func NewVoice() *Qvm {
@@ -24,7 +26,10 @@ func NewVoice() *Qvm {
 
 }
 func (q *Qvm) Alert(msg string) {
-	fmt.Println(msg)
+	_, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	log.Info(msg)
+
 	q.Voice.Play()
 	q.Wg.Add(1)
 	go func() {
@@ -36,4 +41,3 @@ func (q *Qvm) Alert(msg string) {
 	q.Wg.Wait()
 
 }
-

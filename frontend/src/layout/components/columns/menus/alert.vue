@@ -60,14 +60,12 @@
 <script setup>
 
 import {onMounted, onActivated, ref, reactive} from 'vue';
-
 import NewTask from './newTask.vue'
 import {emitter} from "@/utils/bus";
 import {useGenvStore} from '@/store'
-// import {OnDOMContentLoaded} from "../wailsjs/go/gvmapp/App"
 import rpc from '@/rpc'
-import * as AlertService from "@/wailsjs/go/services/AlertService";
-import {CreateAlert, GetAlertList} from "@/wailsjs/go/services/AlertService";
+import {Message} from "@arco-design/web-vue";
+import * as PoolService from "@/wailsjs/go/services/PoolService";
 
 const genvStore = useGenvStore()
 const options = ref({
@@ -85,27 +83,20 @@ const sizeList = ref('small');
 const size = ref(0.5)
 const data = ref([])
 
-const create = async () => {
-
-  // runtime.EventsEmit(a.Ctx, "service.alert.create", item)
-
-  rpc.emit("service.alert.getall")
-  // const res = await rpc.AlertService.GetAlertList()
-  // alert(JSON.stringify(res))
-}
 
 
-const runBot =async (record) => {
-  console.log("record.id",record.id)
-   const res= await rpc.LauncherService.RunTask(record)
+
+const runBot = async (record) => {
+  console.log("record.id", record.id)
+  const res = await rpc.LauncherService.RunTask(record)
   console.log(res)
   // app.value.RunAlert(record.id).then(res => {
   //   console.log(res)
   //
   // })
 }
-const closeBot =async (record) => {
-  const res= await rpc.LauncherService.CloseTask(record)
+const closeBot = async (record) => {
+  const res = await rpc.LauncherService.CloseTask(record)
   console.log(res)
 }
 
@@ -118,8 +109,6 @@ const deleteR = async (record) => {
 
 
 const visible = ref(false);
-
-
 const createAlert = () => {
   visible.value = true;
 };
@@ -143,13 +132,13 @@ async function load() {
   rpc.setPageTitle('K线助手')
   try {
     const res = await rpc.AlertService.GetAlertList()
-    console.log("alert all",JSON.stringify(res))
+    console.log("alert all", JSON.stringify(res))
     if (res.code == 200) {
       data.value = res.data.list
     }
 
   } catch (e) {
-    console.log("eee",e)
+    console.log("eee", e)
   }
   emitter.on('symbolChange', (data) => {
     options.value = data
@@ -159,18 +148,39 @@ async function load() {
 
 
 }
-
+const speak=async (text)=> {
+  //await rpc.PoolService.Speak(text)
+  const msg = new SpeechSynthesisUtterance();
+  msg.text = text;
+  msg.volume = 1.0; // speech volume (default: 1.0)
+  msg.pitch = 1.0; // speech pitch (default: 1.0)
+  msg.rate = 1.0; // speech rate (default: 1.0)
+  msg.lang = 'zh-CN'; // speech language (default: 'en-US')
+  // msg.voiceURI = 'Google UK English Female'; // voice URI (default: platform-dependent)
+  // msg.onboundary = function (event) {
+  //   console.log('Speech reached a boundary:', event.name);
+  // };
+  // msg.onpause = function (event) {
+  //   console.log('Speech paused:', event.utterance.text.substring(event.charIndex));
+  // };
+  window.speechSynthesis.speak(msg);
+}
 onMounted(() => {
   load()
   rpc.on('service.alert.all', (res) => {
     console.log(res)
     if (res) {
       data.value = res
-    }else{
-      data.value=[]
+    } else {
+      data.value = []
     }
   })
   rpc.on('service.alert.create', (res) => {
+    console.log("service.alert.create", res)
+  })
+  rpc.on('service.message.alert', (res) => {
+    Message.success(res)
+    speak(res)
     console.log("service.alert.create", res)
   })
 })

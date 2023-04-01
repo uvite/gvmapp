@@ -15,6 +15,7 @@ require (
 	github.com/go-chi/chi v4.1.0+incompatible
 	github.com/influxdata/influxdb/v2 v2.6.1
 	github.com/joho/godotenv v1.5.1
+	github.com/labstack/gommon v0.3.1
 	github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible
 	github.com/mattn/go-sqlite3 v1.14.16
 	github.com/minio/selfupdate v0.6.0
@@ -145,7 +146,6 @@ require (
 	github.com/klauspost/compress v1.16.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.0.9 // indirect
 	github.com/labstack/echo/v4 v4.9.0 // indirect
-	github.com/labstack/gommon v0.3.1 // indirect
 	github.com/lann/builder v0.0.0-20180802200727-47ae307949d0 // indirect
 	github.com/lann/ps v0.0.0-20150810152359-62de8c46ede0 // indirect
 	github.com/leaanthony/go-ansi-parser v1.0.1 // indirect

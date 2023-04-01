@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"github.com/uvite/gvmapp/backend/gvmbot"
 	"github.com/uvite/gvmapp/backend/util"
 	"github.com/uvite/gvmbot/pkg/bbgo"
@@ -21,7 +22,7 @@ var (
 )
 
 type ExchangeService struct {
-	Ctx      context.Context
+	Ctx context.Context
 
 	Exchange *gvmbot.Exchange
 }
@@ -31,9 +32,6 @@ func NewExchangeService() *ExchangeService {
 	exchangeService := &ExchangeService{}
 
 	return exchangeService
-}
-func (l *ExchangeService) Run() {
-
 }
 
 // 初始化交易所
@@ -58,6 +56,7 @@ func (e *ExchangeService) Init() {
 	ex.Stream = s
 	ex.Session = session
 	e.Exchange = ex
+	e.Subscript()
 
 }
 
@@ -70,7 +69,7 @@ func (eb *ExchangeService) Subscript() {
 	}
 
 	if err := eb.Exchange.Stream.Connect(eb.Ctx); err != nil {
-		fmt.Println(err)
+		log.Error(err)
 	}
 
 }
