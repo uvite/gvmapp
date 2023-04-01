@@ -23,7 +23,7 @@
               <a-list-item :key="index" style="border-bottom: rgba(14,1,1,0.14) solid 1px">
                 <a-row class="grid-demo" style="margin-bottom: 16px;">
                   <a-col flex="50px">
-                    <div>{{ item.metadata.symbol }}</div>
+                    <div>{{ item.symbol }}</div>
                   </a-col>
                   <a-col flex="auto">
                     <a-button-group>
@@ -43,12 +43,15 @@
         </template>
         <template #second>
           {{ symint }}
+          <a-button type="primary" status="success" @click="create">测试</a-button>
+
         </template>
       </a-split>
     </div>
 
 
-    <a-modal v-model:visible="visible" title="创建新警报" @cancel="handleCancel" @before-ok="handleBeforeOk"  width="auto" height="auto">
+    <a-modal v-model:visible="visible" title="创建新警报" @cancel="handleCancel" @before-ok="handleBeforeOk" width="auto"
+             height="auto">
       <new-task ref="editRef" :symint="symint"/>
     </a-modal>
 
@@ -56,13 +59,16 @@
 </template>
 <script setup>
 
-import {onMounted,onActivated, ref, reactive} from 'vue';
+import {onMounted, onActivated, ref, reactive} from 'vue';
 
 import NewTask from './newTask.vue'
 import {emitter} from "@/utils/bus";
 import {useGenvStore} from '@/store'
 // import {OnDOMContentLoaded} from "../wailsjs/go/gvmapp/App"
 import rpc from '@/rpc'
+import * as AlertService from "@/wailsjs/go/services/AlertService";
+import {CreateAlert, GetAlertList} from "@/wailsjs/go/services/AlertService";
+
 const genvStore = useGenvStore()
 const options = ref({
   symbol: "ETHUSDT",
@@ -78,6 +84,13 @@ const show = ref(true)
 const sizeList = ref('small');
 const size = ref(0.5)
 const data = ref([])
+
+// const create = (record) => {
+//
+//   runtime.EventsEmit(a.Ctx, "service.alert.create", item)
+//
+// }
+
 
 const runBot = (record) => {
   app.value.RunAlert(record.id).then(res => {
@@ -116,19 +129,19 @@ const visible = ref(false);
 
 
 const createAlert = () => {
-
   visible.value = true;
 };
-const handleBeforeOk = (done) => {
-
+const handleBeforeOk = async (done) => {
+  alert(333)
   options.value.metadata = editRef.value.form
   options.value.content = editRef.value.code
 
   done()
   console.log(options.value)
-
-  let res = app.value.AddAlertItem(options.value)
-  console.log("[3333]",res)
+  const res= await arpc.AlertService.CreateAlert(options.value)
+  //let res = app.value.AddAlertItem(options.value)
+  alert(res)
+  console.log("[3333]", res)
   getData()
 
 };
@@ -153,13 +166,13 @@ onActivated(() => {
 })
 
 async function load() {
+
   rpc.setPageTitle('K线助手')
-  try{
-    const res = await rpc.app.GetAlertList()
-
+  try {
+    const res = await rpc.AlertService.GetAlertList()
     data.value = res.data.list
-  }catch (e){
-
+  } catch (e) {
+    alert(e)
   }
   emitter.on('symbolChange', (data) => {
     options.value = data
@@ -167,37 +180,14 @@ async function load() {
 
   })
 
-  //
-  // try {
-  //   collectionStore.preview =
-  //       await rpc.CollectionService.GenerateCollectionPreview(collection)
-  // } catch (error) {
-  //   console.error(error)
-  // }
 
-  // projects.value = []
-  //
-  // store.documents.forEach(async (file) => {
-  //   const contents = await rpc.FileSystemService.ReadFileContents(file)
-  //   const collection = types.Collection.createFrom(JSON.parse(contents))
-  //   projects.value = [...projects.value, collection]
-  // })
 }
+
 onMounted(() => {
 
-  //alert(333)
+
   load()
-  // nextTick(() => {
-  //   rpc.on('shortcut.view.refresh', () => {
-  //     if (route.name === 'dashboard') load()
-  //   })
-  //   rpc.on('shortcut.view.hard-refresh', () => {
-  //     if (route.name === 'start') {
-  //       store.documents = []
-  //       load()
-  //     }
-  //   })
-  // })
+
 
 })
 

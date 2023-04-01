@@ -2,6 +2,7 @@ package gvmapp
 
 import (
 	"context"
+	"github.com/uvite/gvmapp/backend/services"
 
 	"encoding/base64"
 	"fmt"
@@ -34,33 +35,41 @@ var (
 
 // App struct
 type App struct {
-	Ctx       context.Context
-	Log       *logrus.Logger
-	Db        *xorm.Engine
-	LogFile   string
-	DBFile    string
-	ConfigMap map[string]map[string]string
-	AliOSS    *oss.Client
-	Exchange  *gvmbot.Exchange
-	Launcher  *launcher.Launcher
-	Qvm       *bot.Qvm
-	//SettingsService   *services.SettingsService
-	//FileSystemService *services.FileSystemService
-	//CollectionService *services.CollectionService
+	Ctx             context.Context
+	Log             *logrus.Logger
+	Db              *xorm.Engine
+	LogFile         string
+	DBFile          string
+	ConfigMap       map[string]map[string]string
+	AliOSS          *oss.Client
+	Exchange        *gvmbot.Exchange
+	Launcher        *launcher.Launcher
+	Qvm             *bot.Qvm
+	StartService    *services.StartService
+	LauncherService *services.LauncherService
+	ExchangeService *services.ExchangeService
+	AlertService    *services.AlertService
 }
 
 // NewApp creates a new App application struct
 func NewApp() *App {
 	return &App{
-		//SettingsService:   services.NewSettingsService(docsdir),
-		//FileSystemService: services.NewFileSystemService(),
-		//CollectionService: services.NewCollectionService(docsdir),
+		StartService:    services.NewStartService(),
+		LauncherService: services.NewLauncherService(),
+		AlertService:    services.NewAlertService(),
+		ExchangeService: services.NewExchangeService(),
 	}
 }
 
 // Startup is called at application Startup
 func (a *App) Startup(ctx context.Context) {
 	a.Ctx = ctx
+	a.StartService.Ctx = ctx
+	a.LauncherService.Ctx = ctx
+	a.ExchangeService.Ctx = ctx
+	a.AlertService.Ctx = ctx
+
+	a.AlertService.SetLauncher(a.LauncherService)
 
 	confDir := util.GetConfigDir()
 	util.GetEnvDir()
@@ -76,7 +85,7 @@ func (a *App) Startup(ctx context.Context) {
 	//a.DBFile = fmt.Sprintf(configs.DBFile, confDir)
 	//a.Db = internal.NewXormEngine(a.DBFile)
 
-	a.InitExchange()
+	//a.InitExchange()
 	//app.FileSystemService.Ctx = ctx
 	//app.CollectionService.Ctx = ctx
 
@@ -164,7 +173,7 @@ func (a *App) OnDOMReady(ctx context.Context) {
 	runtime.EventsOn(a.Ctx, "test", func(optionalData ...interface{}) {
 		a.Log.Info(optionalData...)
 	})
-	runtime.EventsEmit(a.Ctx, "alertList", a.GetAlertList())
+	//runtime.EventsEmit(a.Ctx, "alertList", a.GetAlertList())
 
 }
 func (a *App) OnDOMContentLoaded(arg1 string) string {

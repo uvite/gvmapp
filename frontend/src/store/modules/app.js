@@ -31,6 +31,7 @@ const useAppStore = defineStore('app', {
     appCurrentSetting(state) {
       return { ...state }
     },
+
   },
 
   actions: {
@@ -107,6 +108,12 @@ const useAppStore = defineStore('app', {
       defaultSetting.skin = this.skin
       document.body.setAttribute('mine-skin', this.skin)
       tool.local.set('setting', defaultSetting)
+    },
+    setStrategie(data) {
+      tool.local.set('strategie', data)
+    },
+    getStrategie() {
+      return tool.local.get("strategie")
     }
   },
 })

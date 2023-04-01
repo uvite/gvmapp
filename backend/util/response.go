@@ -1,4 +1,9 @@
 package util
+type RespDate struct {
+	Code int         `json:"code"`
+	Data interface{} `json:"data"`
+	Msg  string      `json:"msg"`
+}
 
 type Resp struct {
 	Code int16 `json:"code"`

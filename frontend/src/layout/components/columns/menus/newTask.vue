@@ -1,18 +1,18 @@
 <template>
-
+  <a-spin :loading="dataLoading" tip="加载中..." class="w-full">
   <a-layout style="height: 100%;width:1000px; background-color: white">
 
     <a-layout>
+
       <a-layout-sider>
-        <a-button type="primary" @click="downToLocal" :disabled="sysnc">更新策略模板</a-button>
+        <!--        <a-button type="primary" @click="downToLocal" :disabled="sysnc">更新策略模板</a-button>-->
         <a-list>
 
           <a-list-item v-for="(item, index) in notes" @click="noteSelect(item)">{{ item }}</a-list-item>
 
         </a-list>
-
-
       </a-layout-sider>
+
       <a-layout-content>
         <a-tabs v-model:active-key="activeTab">
           <a-tab-pane title="简单模式" key="base_config">
@@ -34,15 +34,13 @@
             </a-row>
           </a-tab-pane>
           <a-tab-pane title="代码模式" key="code_config">
-            <div  :style="{  height: '500px'}">
-
-
+            <div :style="{  height: '500px'}">
 
 
               <vue-monaco-editor
                   v-model:value="code"
                   theme="vs-dark"
-             />
+              />
 
             </div>
 
@@ -54,14 +52,17 @@
     </a-layout>
 
   </a-layout>
-
+  </a-spin>
 </template>
-<script setup lang="ts">
+<script setup>
 import {Message} from "@arco-design/web-vue";
-import {onMounted, provide, reactive, ref} from "vue";
+import {nextTick, onActivated, onMounted, provide, reactive, ref} from "vue";
 import generate from "@/api/setting/generate";
 import {maEvent} from "@cps/ma-form/js/formItemMixin";
+import rpc from "@/rpc";
+import {useAppStore, useUserStore} from '@/store'
 
+const appStore = useAppStore()
 const app = ref(window.go.gvmapp.App)
 const activeTab = ref('base_config')
 const visible = ref(false)
@@ -72,6 +73,7 @@ const currentNote = ref()
 const columns = ref([])
 const form = ref({})
 const code = ref()
+const dataLoading = ref(true)
 const options = ref({
   init: false
 })
@@ -81,28 +83,7 @@ const symint = ref({
 })
 
 const showMa = ref(false)
-const open = () => {
-  visible.value = true
 
-  app.value.GetDirs().then((res) => {
-
-    if (res && res.code == 200) {
-      notebooks.value = res.data.dirs;
-      //alert(JSON.stringify(res.data))
-      currentNotebook.value = res.data.dirs[0];
-      notes.value = res.data.files.map((n, i) => {
-        return n.replace('.js', '')
-
-      });
-      notes.value.shift()
-      // alert(JSON.stringify(notes.value))
-
-    } else {
-      Message.error('获取云端数据失败：' + res.msg);
-    }
-  });
-
-}
 
 const noteSelect = (key, keyPath) => {
   console.log("选中key：" + key);
@@ -145,20 +126,50 @@ const save = async (done) => {
   done(true)
 }
 
-const downToLocal = () => {
-  app.value.DownToLocal().then((res) => {
+
+
+const load = async () => {
+  dataLoading.value = true
+  let strategie = appStore.getStrategie()
+
+  if (!strategie  ) {
+
+    const res = await rpc.StartService.DownToLocal()
     if (res && res.code == 200) {
-      Message.info('同步成功');
-    } else {
-      Message.error('同步失败：' + res.msg);
+      notebooks.value = res.data.dirs;
+      //alert(JSON.stringify(res.data))
+      currentNotebook.value = res.data.dirs[0];
+      notes.value = res.data.files.map((n, i) => {
+        return n.replace('.js', '')
+
+      });
+      notes.value.shift()
     }
-  });
+  }else {
+    notebooks.value = strategie.dirs;
+    currentNotebook.value = strategie.dirs[0];
+    notes.value = strategie.files.map((n, i) => {
+      return n.replace('.js', '')
+
+    });
+    notes.value.shift()
+  }
+  dataLoading.value=false
 }
+
+
 onMounted(() => {
-  open()
+
+  load()
+  // nextTick(() => {
+  //   rpc.on('shortcut.view.refresh', () => {
+  //
+  //   })
+  // })
+  // rpc.setPageTitle("Build Settings")
 })
 
-defineExpose({open, form,code})
+defineExpose({  form, code})
 </script>
 
 

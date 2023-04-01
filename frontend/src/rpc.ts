@@ -1,10 +1,13 @@
 import * as app from '@/wailsjs/go/gvmapp/App'
-// import * as CollectionService from '@/wailsjs/go/services/CollectionService'
-// import * as FileSystemService from '@/wailsjs/go/services/FileSystemService'
-// import * as SettingsService from '@/wailsjs/go/services/SettingsService'
-import { WindowSetTitle, EventsOnMultiple } from '@/wailsjs/runtime'
+import * as StartService from '@/wailsjs/go/services/StartService'
+import * as AlertService from '@/wailsjs/go/services/AlertService'
+import * as ExchangeService from '@/wailsjs/go/services/ExchangeService'
+import * as LauncherService from '@/wailsjs/go/services/LauncherService'
 
-const rpc = { app,   on, setPageTitle }
+import {WindowSetTitle, EventsOnMultiple} from '@/wailsjs/runtime'
+
+const rpc = {app, StartService, AlertService, ExchangeService, LauncherService, on, setPageTitle}
+
 // const rpc = { app, CollectionService, FileSystemService, SettingsService, on, setPageTitle }
 
 function on(event: string, callback: (...data: any) => void) {
