@@ -1,6 +1,6 @@
 module github.com/uvite/gvmapp
 
-go 1.20
+go 1.18
 
 require (
 	github.com/adshao/go-binance/v2 v2.3.10
