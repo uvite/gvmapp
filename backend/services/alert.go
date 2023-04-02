@@ -87,7 +87,7 @@ func (a *AlertService) CreateAlert(item taskmodel.Task) *util.Resp {
 		createJs(*task)
 
 	}
-	//runtime.EventsEmit(a.Ctx, "service.alert.create", task)
+	runtime.EventsEmit(a.Ctx, "service.alert.create", task)
 	return util.Success(task)
 
 }

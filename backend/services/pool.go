@@ -46,6 +46,10 @@ func (l *PoolService) Listen() {
 }
 func (b *PoolService) StartBot(promise *executor.Promise) {
 	log.Info("[start bot]", promise.Id)
+	_, ok := b.currentCancel.Load(promise.Id)
+	if ok{
+		return
+	}
 	bot := NewBotService()
 	bot.Ctx = b.Ctx
 	bot.SetExchange(b.Exchange)
@@ -64,6 +68,8 @@ func (b *PoolService) CloseBot(promise *executor.Promise) {
 	if ok {
 		close.(context.CancelFunc)()
 	}
+	b.currentCancel.Delete(promise.Id)
+
 
 	//b.Bots = append(b.Bots, bot)
 }

@@ -38,8 +38,9 @@ func (l *LauncherService) Init() {
 }
 
 func (l *LauncherService) Event() {
-	runtime.EventsOn(l.Ctx, "service.alert.create", func(option ...interface{}) {
-
+	runtime.EventsOn(l.Ctx, "service.alert.create", func(data ...interface{}) {
+		task := data[0].(*taskmodel.Task)
+		l.RunTask(task)
 	})
 }
 func (l *LauncherService) ShutDown() {
@@ -57,12 +58,26 @@ func (l *LauncherService) RunTask(task *taskmodel.Task) *util.Resp {
 		return util.Error(fmt.Sprintf("启动失败 %s", task.ID))
 
 	} else {
+		l.ChangeStatus(task, taskmodel.TaskStatusActive)
 		return util.Success(promise)
 	}
 
 }
 func (l *LauncherService) CloseTask(task *taskmodel.Task) *util.Resp {
 	err := l.Launcher.Executor.Close(l.Ctx, task.ID)
+	if err != nil {
+		return util.Error(fmt.Sprintf("启动失败 %s", task.ID))
+	} else {
+		l.ChangeStatus(task, taskmodel.TaskStatusInactive)
+		return util.Success("关闭成功")
+	}
+
+}
+
+func (l *LauncherService) ChangeStatus(task *taskmodel.Task, status string) *util.Resp {
+
+	_, err := l.Launcher.KvService.UpdateTask(l.Ctx, task.ID, taskmodel.TaskUpdate{Status: &status})
+
 	if err != nil {
 		return util.Error(fmt.Sprintf("启动失败 %s", task.ID))
 	} else {

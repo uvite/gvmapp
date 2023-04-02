@@ -23,12 +23,12 @@
               <a-list-item :key="index" style="border-bottom: rgba(14,1,1,0.14) solid 1px">
                 <a-row class="grid-demo" style="margin-bottom: 16px;">
                   <a-col flex="50px">
-                    <div>{{ item.symbol }}</div>
+                    <div>{{ item.symbol }}{{item.status}}<IconPlayCircle  v-if="item.status=='inactive'" @click="closeBot(item)" /><IconPause  v-if="item.status=='active'" @click="runBot(item)" /> </div>
                   </a-col>
                   <a-col flex="auto">
                     <a-button-group>
-                      <a-button type="primary" status="success" size="small" @click="runBot(item)">运行</a-button>
-                      <a-button type="primary" status="danger" size="small" @click="closeBot(item)">停止</a-button>
+<!--                      <a-button type="primary" status="success" size="small" >运行</a-button>-->
+<!--                      <a-button type="primary" status="danger" size="small" @click="closeBot(item)">停止</a-button>-->
                       <a-button size="small" @click="deleteR(item)"> 删除</a-button>
                     </a-button-group>
                   </a-col>
@@ -90,6 +90,7 @@ const runBot = async (record) => {
   console.log("record.id", record.id)
   const res = await rpc.LauncherService.RunTask(record)
   console.log(res)
+  rpc.emit("service.alert.getall")
   // app.value.RunAlert(record.id).then(res => {
   //   console.log(res)
   //
@@ -98,9 +99,12 @@ const runBot = async (record) => {
 const closeBot = async (record) => {
   const res = await rpc.LauncherService.CloseTask(record)
   console.log(res)
+  rpc.emit("service.alert.getall")
 }
 
 const deleteR = async (record) => {
+  const res = await rpc.LauncherService.CloseTask(record)
+  console.log(res)
   await rpc.AlertService.DelAlertItem(record.id).then(res => {
     console.log(res)
     rpc.emit("service.alert.getall")

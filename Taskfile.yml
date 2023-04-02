@@ -4,9 +4,12 @@ tasks:
   dev:
     cmds:
      - wails dev
+#  build:
+#    cmds:
+#      - wails build -clean -tags exp_gowebview2loader
   build:
     cmds:
-      - wails build -clean -tags exp_gowebview2loader
+      -  docker run --rm -v "$PWD":/usr/src/myapp -v /Users/leven/hein/gvmapp/vendor/github.com/wailsapp/wails/v2:/wails/v2 -w /usr/src/myapp wails-cross-go118beta2:linux-amd64 /bin/sh -c 'CGO_ENABLED=1 go build -tags desktop,production'
 
   assets:
     cmds:
