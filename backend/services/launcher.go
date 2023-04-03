@@ -52,7 +52,7 @@ func (l *LauncherService) ShutDown() {
 }
 
 func (l *LauncherService) RunTask(task *taskmodel.Task) *util.Resp {
-
+	log.Info("启动一个新的任务", task.ID)
 	promise, err := l.Launcher.Executor.PromisedExecute(l.Ctx, task.ID)
 	if err != nil {
 		return util.Error(fmt.Sprintf("启动失败 %s", task.ID))
@@ -64,6 +64,8 @@ func (l *LauncherService) RunTask(task *taskmodel.Task) *util.Resp {
 
 }
 func (l *LauncherService) CloseTask(task *taskmodel.Task) *util.Resp {
+	log.Info("关闭一个任务", task.ID)
+
 	err := l.Launcher.Executor.Close(l.Ctx, task.ID)
 	if err != nil {
 		return util.Error(fmt.Sprintf("启动失败 %s", task.ID))

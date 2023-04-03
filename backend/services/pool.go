@@ -31,7 +31,7 @@ func (l *PoolService) Listen() {
 
 		promise := data[0].(*executor.Promise)
 		fmt.Printf("%+v", promise)
-		//log.Info("开始", promise.ID())
+		log.Info("开始", promise.Id)
 		l.StartBot(promise)
 	})
 	runtime.EventsOn(l.Ctx, "service.pool.closebot", func(data ...interface{}) {
@@ -39,7 +39,7 @@ func (l *PoolService) Listen() {
 
 		promise := data[0].(*executor.Promise)
 		fmt.Printf("promise%+v\n", promise)
-		//log.Info("开始", promise.ID())
+		log.Info("关闭", promise.Id)
 
 		l.CloseBot(promise)
 	})
@@ -47,7 +47,7 @@ func (l *PoolService) Listen() {
 func (b *PoolService) StartBot(promise *executor.Promise) {
 	log.Info("[start bot]", promise.Id)
 	_, ok := b.currentCancel.Load(promise.Id)
-	if ok{
+	if ok {
 		return
 	}
 	bot := NewBotService()
@@ -69,7 +69,6 @@ func (b *PoolService) CloseBot(promise *executor.Promise) {
 		close.(context.CancelFunc)()
 	}
 	b.currentCancel.Delete(promise.Id)
-
 
 	//b.Bots = append(b.Bots, bot)
 }

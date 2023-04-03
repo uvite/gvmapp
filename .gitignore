@@ -11,7 +11,7 @@ build/*
 .env
 adev
 node_modules
-
+vendor
 frontend/dist
 frontend/wailsjs
 frontend/src/wailsjs

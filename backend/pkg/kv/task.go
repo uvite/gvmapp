@@ -550,8 +550,7 @@ func (s *Service) createTask(ctx context.Context, tx Tx, tc taskmodel.TaskCreate
 		return nil, taskmodel.ErrUnexpectedTaskBucketErr(err)
 	}
 	v := &taskmodel.Task{}
-	a := json.Unmarshal(taskBytes, v)
-	fmt.Println("re back", a)
+	json.Unmarshal(taskBytes, v)
 
 	// write the org index
 	err = indexBucket.Put(orgKey, taskKey)

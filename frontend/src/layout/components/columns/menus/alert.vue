@@ -23,7 +23,7 @@
               <a-list-item :key="index" style="border-bottom: rgba(14,1,1,0.14) solid 1px">
                 <a-row class="grid-demo" style="margin-bottom: 16px;">
                   <a-col flex="50px">
-                    <div>{{ item.symbol }}{{item.status}}<IconPlayCircle  v-if="item.status=='inactive'" @click="closeBot(item)" /><IconPause  v-if="item.status=='active'" @click="runBot(item)" /> </div>
+                    <div>{{ item.symbol }}{{item.status}}<IconPause v-if="item.status=='inactive'" @click="closeBot(item)" /><IconPlayCircle   v-if="item.status=='active'" @click="runBot(item)" /> </div>
                   </a-col>
                   <a-col flex="auto">
                     <a-button-group>
@@ -42,8 +42,8 @@
 
         </template>
         <template #second>
-          {{ symint }}
-          <a-button type="primary" status="success" @click="test">测试</a-button>
+<!--          {{ symint }}-->
+<!--          <a-button type="primary" status="success" @click="test">测试</a-button>-->
 
         </template>
       </a-split>
